@@ -70,6 +70,48 @@ public class LibreOOPAlgorithm {
         sendData(fullData, timestamp, null, null, tagId);
     }
 
+
+//    public static void HandleData(OOPResults oOPResults) {
+//        OOPResultsContainer.HistoricBg[] historicBgArr;
+//        UserError.Log.e(TAG, "oOPResultsArray===" + oOPResults.toGson());
+//        boolean booleanDefaultFalse = Pref.getBooleanDefaultFalse("calibrate_external_libre_algorithm");
+//        ReadingData.TransferObject transferObject = new ReadingData.TransferObject();
+//        transferObject.data = new ReadingData();
+//        transferObject.data.trend = new ArrayList();
+//        double d = booleanDefaultFalse ? 8.50000063750005d : 1.0d;
+//        Sensor currentSensor = Sensor.currentSensor();
+//        if (currentSensor != null) {
+//            currentSensor.started_at = System.currentTimeMillis() - ((oOPResults.currentTime * 60) * 1000);
+//            currentSensor.update();
+//        } else {
+//            Sensor.create(System.currentTimeMillis() - ((oOPResults.currentTime * 60) * 1000));
+//        }
+//        GlucoseData glucoseData = new GlucoseData();
+//        glucoseData.sensorTime = oOPResults.currentTime;
+//        glucoseData.realDate = oOPResults.timestamp;
+//        glucoseData.glucoseLevel = (int) (oOPResults.currentBg * d);
+//        glucoseData.glucoseLevelRaw = (int) (oOPResults.currentBg * d);
+//        transferObject.data.trend.add(glucoseData);
+//        transferObject.data.history = new ArrayList();
+//        for (OOPResultsContainer.HistoricBg historicBg : oOPResults.historicBg) {
+//            if (historicBg.quality == 0) {
+//                GlucoseData glucoseData2 = new GlucoseData();
+//                glucoseData2.realDate = oOPResults.timestamp + ((historicBg.time - oOPResults.currentTime) * UsbId.SILABS_CP2102);
+//                glucoseData2.glucoseLevel = (int) (historicBg.bg * d);
+//                glucoseData2.glucoseLevelRaw = (int) (historicBg.bg * d);
+//                transferObject.data.history.add(glucoseData2);
+//            }
+//        }
+//        GlucoseData glucoseData3 = new GlucoseData();
+//        glucoseData3.realDate = oOPResults.timestamp;
+//        glucoseData3.glucoseLevel = (int) (oOPResults.currentBg * d);
+//        glucoseData3.glucoseLevelRaw = (int) (oOPResults.currentBg * d);
+//        transferObject.data.history.add(glucoseData3);
+//        UserError.Log.e(TAG, "HandleData Created the following object " + transferObject.toString());
+//        LibreAlarmReceiver.CalculateFromDataTransferObject(transferObject, booleanDefaultFalse);
+//    }
+
+
     static public void sendData(byte[] fullData, long timestamp, byte[] patchUid, byte[] patchInfo, String tagId) {
         if (fullData == null) {
             Log.e(TAG, "sendData called with null data");

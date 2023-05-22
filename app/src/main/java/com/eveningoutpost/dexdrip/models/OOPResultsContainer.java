@@ -11,20 +11,6 @@ class HistoricBg {
     public double bg;
 }
 
-class OOPResults {
-    double currentBg;
-    int currentTime;
-    int currentTrend;
-    HistoricBg [] historicBg;
-    long timestamp;
-    String serialNumber;
-
-    String toGson() {
-        Gson gson = new GsonBuilder().create();
-        return gson.toJson(this);
-    }
-}
-
 public class OOPResultsContainer {
     OOPResultsContainer() {
         oOPResultsArray = new OOPResults[0];

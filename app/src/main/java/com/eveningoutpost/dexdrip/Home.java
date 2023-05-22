@@ -1849,6 +1849,9 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
             permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
 
+        if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT))
+            permissions.add(android.Manifest.permission.BLUETOOTH_CONNECT);
+
         if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION))
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
 

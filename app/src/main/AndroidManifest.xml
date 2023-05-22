@@ -7,7 +7,9 @@
 
     <uses-sdk tools:overrideLibrary="androidx.health.connect.client, info.nightscout.sdk" />
     <!-- To receive data from HAPP. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.Manifest.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
     <uses-permission android:name="com.eveningoutpost.dexdrip.permissions.RECEIVE_EXTERNAL_STATUSLINE" /> <!-- To receive data from Aidex -->
     <uses-permission android:name="com.microtechmd.cgms.aidex.permissions.RECEIVE_BG_ESTIMATE" />
@@ -73,6 +75,8 @@
         android:maxAspectRatio="2.1"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <service android:name=".MyService"
+            />
         <activity
             android:name=".HealthPrivacy"
             android:label="xDrip Privacy Policy"
@@ -580,6 +584,7 @@
                 <data android:scheme="package" />
             </intent-filter>
         </receiver>
+
         <receiver android:name=".utils.framework.WakeLockTrampoline" />
         <receiver android:name=".watch.thinjam.BackgroundScanReceiver" />
         <receiver

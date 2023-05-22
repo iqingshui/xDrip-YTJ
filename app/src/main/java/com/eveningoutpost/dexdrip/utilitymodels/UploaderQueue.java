@@ -12,7 +12,6 @@ import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.util.SQLiteUtils;
-import com.eveningoutpost.dexdrip.SSTTUtils;
 import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.BloodTest;
 import com.eveningoutpost.dexdrip.models.Calibration;
@@ -193,13 +192,13 @@ public class UploaderQueue extends Model {
     }
 
     public static void newTransmitterDataEntry(String action, Model obj) {
-        if (!Pref.getBooleanDefaultFalse("mongo_load_transmitter_data")) {
-            return;
-        }
-        newEntry(action, obj);
-        // For libre us sensors, we have a reading, it might not create a BG entry, but we still need
-        // to upload it.
-        startSyncService(3000); // sync in 3 seconds
+    	if(!Pref.getBooleanDefaultFalse("mongo_load_transmitter_data")) {
+    		return;
+    	}
+    	newEntry(action, obj);
+    	// For libre us sensors, we have a reading, it might not create a BG entry, but we still need
+    	// to upload it.
+    	startSyncService(3000); // sync in 3 seconds
     }
 
     // TODO remove duplicated functionality, replace with generic multi-purpose method
@@ -467,9 +466,7 @@ public class UploaderQueue extends Model {
                     // Rebuild url cache
                     processedBaseURIs = new ArrayList<>();
                     processedBaseURInames = new ArrayList<>();
-                    String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
-                    String baseURLSettings = internalUrl;
-
+                    final String baseURLSettings = Pref.getStringDefaultBlank("cloud_storage_api_base");
                     final ArrayList<String> baseURIs = new ArrayList<>();
 
                     for (String baseURLSetting : baseURLSettings.split(" ")) {

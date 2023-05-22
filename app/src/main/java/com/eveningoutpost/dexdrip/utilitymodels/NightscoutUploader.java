@@ -8,7 +8,6 @@ import android.util.Base64;
 
 import com.eveningoutpost.dexdrip.Home;
 import com.eveningoutpost.dexdrip.MegaStatus;
-import com.eveningoutpost.dexdrip.SSTTUtils;
 import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.BloodTest;
 import com.eveningoutpost.dexdrip.models.Calibration;
@@ -90,94 +89,94 @@ import static com.eveningoutpost.dexdrip.utilitymodels.OkHttpWrapper.enableTls12
  */
 public class NightscoutUploader {
 
-    private static final String TAG = NightscoutUploader.class.getSimpleName();
-    private static final int SOCKET_TIMEOUT = 60000;
-    private static final int CONNECTION_TIMEOUT = 30000;
-    private static final boolean d = false;
-    private static final boolean USE_GZIP = true; // conditional inside interceptor
-    public static final String VIA_NIGHTSCOUT_LOADER_TAG = "Nightscout Loader";
+        private static final String TAG = NightscoutUploader.class.getSimpleName();
+        private static final int SOCKET_TIMEOUT = 60000;
+        private static final int CONNECTION_TIMEOUT = 30000;
+        private static final boolean d = false;
+        private static final boolean USE_GZIP = true; // conditional inside interceptor
+        public static final String VIA_NIGHTSCOUT_LOADER_TAG = "Nightscout Loader";
 
-    public static long last_success_time = -1;
-    public static long last_exception_time = -1;
-    public static int last_exception_count = 0;
-    public static String last_exception;
-    public static final String VIA_NIGHTSCOUT_TAG = "via Nightscout";
+        public static long last_success_time = -1;
+        public static long last_exception_time = -1;
+        public static int last_exception_count = 0;
+        public static String last_exception;
+        public static final String VIA_NIGHTSCOUT_TAG = "via Nightscout";
 
-    private static boolean notification_shown = false;
+        private static boolean notification_shown = false;
 
-    private static final String LAST_SUCCESS_TREATMENT_DOWNLOAD = "NS-Last-Treatment-Download-Modified";
-    private static final String ETAG = "ETAG";
+        private static final String LAST_SUCCESS_TREATMENT_DOWNLOAD = "NS-Last-Treatment-Download-Modified";
+        private static final String ETAG = "ETAG";
 
 
-    private static int failurecount = 0;
+        private static int failurecount = 0;
 
-    private Context mContext;
-    private Boolean enableRESTUpload;
-    private Boolean enableMongoUpload;
-    private SharedPreferences prefs;
-    private OkHttpClient client;
+        private Context mContext;
+        private Boolean enableRESTUpload;
+        private Boolean enableMongoUpload;
+        private SharedPreferences prefs;
+        private OkHttpClient client;
 
-    public interface NightscoutService {
-        @POST("entries")
-        Call<ResponseBody> upload(@Header("api-secret") String secret, @Body RequestBody body);
+        public interface NightscoutService {
+            @POST("entries")
+            Call<ResponseBody> upload(@Header("api-secret") String secret, @Body RequestBody body);
 
-        @POST("entries")
-        Call<ResponseBody> upload(@Body RequestBody body);
+            @POST("entries")
+            Call<ResponseBody> upload(@Body RequestBody body);
 
-        @POST("devicestatus")
-        Call<ResponseBody> uploadDeviceStatus(@Body RequestBody body);
+            @POST("devicestatus")
+            Call<ResponseBody> uploadDeviceStatus(@Body RequestBody body);
 
-        @POST("devicestatus")
-        Call<ResponseBody> uploadDeviceStatus(@Header("api-secret") String secret, @Body RequestBody body);
+            @POST("devicestatus")
+            Call<ResponseBody> uploadDeviceStatus(@Header("api-secret") String secret, @Body RequestBody body);
 
-        @GET("status.json")
-        Call<ResponseBody> getStatus(@Header("api-secret") String secret);
+            @GET("status.json")
+            Call<ResponseBody> getStatus(@Header("api-secret") String secret);
 
-        @POST("treatments")
-        Call<ResponseBody> uploadTreatments(@Header("api-secret") String secret, @Body RequestBody body);
+            @POST("treatments")
+            Call<ResponseBody> uploadTreatments(@Header("api-secret") String secret, @Body RequestBody body);
 
-        @PUT("treatments")
-        Call<ResponseBody> upsertTreatments(@Header("api-secret") String secret, @Body RequestBody body);
+            @PUT("treatments")
+            Call<ResponseBody> upsertTreatments(@Header("api-secret") String secret, @Body RequestBody body);
 
-        @GET("treatments")
-            // retrofit2/okhttp3 could do the if-modified-since natively using cache
-        Call<ResponseBody> downloadTreatments(@Header("api-secret") String secret, @Header("BROKEN-If-Modified-Since") String ifmodified);
+            @GET("treatments")
+                // retrofit2/okhttp3 could do the if-modified-since natively using cache
+            Call<ResponseBody> downloadTreatments(@Header("api-secret") String secret, @Header("BROKEN-If-Modified-Since") String ifmodified);
 
-        @GET("treatments.json")
-        Call<ResponseBody> findTreatmentByUUID(@Header("api-secret") String secret, @Query("find[uuid]") String uuid);
+            @GET("treatments.json")
+            Call<ResponseBody> findTreatmentByUUID(@Header("api-secret") String secret, @Query("find[uuid]") String uuid);
 
-        @DELETE("treatments/{id}")
-        Call<ResponseBody> deleteTreatment(@Header("api-secret") String secret, @Path("id") String id);
+            @DELETE("treatments/{id}")
+            Call<ResponseBody> deleteTreatment(@Header("api-secret") String secret, @Path("id") String id);
 
-        @POST("activity")
-        Call<ResponseBody> uploadActivity(@Header("api-secret") String secret, @Body RequestBody body);
+            @POST("activity")
+            Call<ResponseBody> uploadActivity(@Header("api-secret") String secret, @Body RequestBody body);
 
-    }
-
-    private class UploaderException extends RuntimeException {
-        int code;
-
-        public UploaderException(String message, int code) {
-            super(message);
-            this.code = code;
         }
-    }
 
-    public NightscoutUploader(Context context) {
-        mContext = context;
-        prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        final OkHttpClient.Builder okHttp3Builder = enableTls12OnPreLollipop(new OkHttpClient.Builder());
-        if (UserError.ExtraLogTags.shouldLogTag(TAG, android.util.Log.VERBOSE)) {
-            okHttp3Builder.addInterceptor(new SSLHandshakeInterceptor());
+        private class UploaderException extends RuntimeException {
+            int code;
+
+            public UploaderException (String message, int code) {
+                super(message);
+                this.code = code;
+            }
         }
-        if (USE_GZIP) okHttp3Builder.addInterceptor(new GzipRequestInterceptor());
-        okHttp3Builder.connectTimeout(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
-        okHttp3Builder.writeTimeout(SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
-        okHttp3Builder.readTimeout(SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
-        client = okHttp3Builder.build();
-        enableRESTUpload = prefs.getBoolean("cloud_storage_api_enable", false);
-        enableMongoUpload = prefs.getBoolean("cloud_storage_mongodb_enable", false);
-    }
+
+        public NightscoutUploader(Context context) {
+            mContext = context;
+            prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            final OkHttpClient.Builder okHttp3Builder = enableTls12OnPreLollipop(new OkHttpClient.Builder());
+            if (UserError.ExtraLogTags.shouldLogTag(TAG, android.util.Log.VERBOSE)) {
+                okHttp3Builder.addInterceptor(new SSLHandshakeInterceptor());
+            }
+            if (USE_GZIP) okHttp3Builder.addInterceptor(new GzipRequestInterceptor());
+            okHttp3Builder.connectTimeout(CONNECTION_TIMEOUT, TimeUnit.MILLISECONDS);
+            okHttp3Builder.writeTimeout(SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
+            okHttp3Builder.readTimeout(SOCKET_TIMEOUT, TimeUnit.MILLISECONDS);
+            client = okHttp3Builder.build();
+            enableRESTUpload = prefs.getBoolean("cloud_storage_api_enable", false);
+            enableMongoUpload = prefs.getBoolean("cloud_storage_mongodb_enable", false);
+        }
 
     public static void launchDownloadRest() {
         if (Pref.getBooleanDefaultFalse("cloud_storage_api_enable")
@@ -237,7 +236,7 @@ public class NightscoutUploader {
         if (uuid.length() == 24) return uuid; // already converted
         if (uuid.length() < 24) {
             // convert non-standard uuids to compatible ones
-            return CipherUtils.getMD5(uuid).substring(0, 24);
+            return CipherUtils.getMD5(uuid).substring(0,24);
         }
         return uuid.replaceAll("-", "").substring(0, 24);
     }
@@ -301,7 +300,7 @@ public class NightscoutUploader {
     }
 
     private String TryResolveName(String baseURI) {
-        Log.d(TAG, "Resolveing name");
+        Log.d(TAG,  "Resolveing name" );
         URI uri;
         try {
             uri = new URI(baseURI);
@@ -312,17 +311,17 @@ public class NightscoutUploader {
         String host = uri.getHost();
         Log.d(TAG, "host = " + host);
         // Host has either to end with .local, or be one word (with no dots) for us to try and resolve it.
-        if (host == null || (host.contains(".") && (!host.endsWith(".local")))) {
+        if (host == null ||  (host.contains(".") && (!host.endsWith(".local")))) {
             return baseURI;
         }
         // So, we need to resolve this name
         String fullHost = host;
         try {
-            if (!fullHost.endsWith(".local")) {
+            if(!fullHost.endsWith(".local")) {
                 fullHost += ".local";
             }
             String ip = Mdns.genericResolver(fullHost);
-            if (ip == null) {
+            if(ip == null) {
                 Log.d(TAG, "Recieved null resolving " + fullHost);
                 return baseURI;
             }
@@ -339,8 +338,7 @@ public class NightscoutUploader {
     }
 
     private synchronized boolean doRESTtreatmentDownload(SharedPreferences prefs) {
-        String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
-        String baseURLSettings = internalUrl;
+        final String baseURLSettings = prefs.getString("cloud_storage_api_base", "");
         final ArrayList<String> baseURIs = new ArrayList<>();
 
         boolean new_data = false;
@@ -356,6 +354,7 @@ public class NightscoutUploader {
             Log.e(TAG, "Unable to process API Base URL: " + e);
             return false;
         }
+
 
 
         // process a list of base uris
@@ -398,8 +397,7 @@ public class NightscoutUploader {
                         doStatusUpdate(nightscoutService, retrofit.baseUrl().url().toString(), hashedSecret); // update status if needed
                         final String LAST_MODIFIED_KEY = LAST_SUCCESS_TREATMENT_DOWNLOAD + CipherUtils.getMD5(uri.toString()); // per uri marker
                         String last_modified_string = PersistentStore.getString(LAST_MODIFIED_KEY);
-                        if (last_modified_string.equals(""))
-                            last_modified_string = JoH.getRFC822String(0);
+                        if (last_modified_string.equals("")) last_modified_string = JoH.getRFC822String(0);
                         final long request_start = JoH.tsl();
                         r = nightscoutService.downloadTreatments(hashedSecret, last_modified_string).execute();
 
@@ -446,138 +444,137 @@ public class NightscoutUploader {
     }
 
     private boolean doRESTUpload(SharedPreferences prefs, List<BgReading> glucoseDataSets, List<BloodTest> meterRecords, List<Calibration> calRecords) {
-        String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
-        String baseURLSettings = internalUrl;
+            String baseURLSettings = prefs.getString("cloud_storage_api_base", "");
+            ArrayList<String> baseURIs = new ArrayList<String>();
 
-        ArrayList<String> baseURIs = new ArrayList<String>();
-
-        try {
-            for (String baseURLSetting : baseURLSettings.split(" ")) {
-                String baseURL = baseURLSetting.trim();
-                if (baseURL.isEmpty()) continue;
-                baseURIs.add(baseURL + (baseURL.endsWith("/") ? "" : "/"));
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Unable to process API Base URL: " + e);
-            return false;
-        }
-        boolean any_successes = false;
-        for (String baseURI : baseURIs) {
             try {
-                baseURI = TryResolveName(baseURI);
-                int apiVersion = 0;
-                URI uri = new URI(baseURI);
-                if ((uri.getHost().startsWith("192.168.")) && prefs.getBoolean("skip_lan_uploads_when_no_lan", true) && (!JoH.isLANConnected())) {
-                    Log.d(TAG, "Skipping Nighscout upload to: " + uri.getHost() + " due to no LAN connection");
-                    continue;
+                for (String baseURLSetting : baseURLSettings.split(" ")) {
+                    String baseURL = baseURLSetting.trim();
+                    if (baseURL.isEmpty()) continue;
+                    baseURIs.add(baseURL + (baseURL.endsWith("/") ? "" : "/"));
                 }
-                if (uri.getPath().endsWith("/v1/")) apiVersion = 1;
-                String baseURL;
-                String secret = uri.getUserInfo();
-                if ((secret == null || secret.isEmpty()) && apiVersion == 0) {
-                    baseURL = baseURI;
-                } else if ((secret == null || secret.isEmpty())) {
-                    throw new Exception("Starting with API v1, a pass phase is required");
-                } else if (apiVersion > 0) {
-                    baseURL = baseURI.replaceFirst("//[^@]+@", "//");
+            } catch (Exception e) {
+                Log.e(TAG, "Unable to process API Base URL: "+e);
+                return false;
+            }
+            boolean any_successes = false;
+            for (String baseURI : baseURIs) {
+                try {
+                    baseURI = TryResolveName(baseURI);
+                    int apiVersion = 0;
+                    URI uri = new URI(baseURI);
+                    if ((uri.getHost().startsWith("192.168.")) && prefs.getBoolean("skip_lan_uploads_when_no_lan", true) && (!JoH.isLANConnected()))
+                    {
+                        Log.d(TAG,"Skipping Nighscout upload to: "+uri.getHost()+" due to no LAN connection");
+                        continue;
+                    }
+                    if (uri.getPath().endsWith("/v1/")) apiVersion = 1;
+                    String baseURL;
+                    String secret = uri.getUserInfo();
+                    if ((secret == null || secret.isEmpty()) && apiVersion == 0) {
+                        baseURL = baseURI;
+                    } else if ((secret == null || secret.isEmpty())) {
+                        throw new Exception("Starting with API v1, a pass phase is required");
+                    } else if (apiVersion > 0) {
+                        baseURL = baseURI.replaceFirst("//[^@]+@", "//");
+                    } else {
+                        throw new Exception("Unexpected baseURI: "+baseURI);
+                    }
+
+                    final Retrofit retrofit = new Retrofit.Builder().baseUrl(baseURL).client(client).build();
+                    final NightscoutService nightscoutService = retrofit.create(NightscoutService.class);
+
+                    if (apiVersion == 1) {
+                        String hashedSecret = Hashing.sha1().hashBytes(secret.getBytes(Charsets.UTF_8)).toString();
+                        doStatusUpdate(nightscoutService, retrofit.baseUrl().url().toString(), hashedSecret); // update status if needed
+                        doRESTUploadTo(nightscoutService, hashedSecret, glucoseDataSets, meterRecords, calRecords);
+                    } else {
+                        doLegacyRESTUploadTo(nightscoutService, glucoseDataSets);
+                    }
+                    any_successes = true;
+                    last_success_time = JoH.tsl();
+                    last_exception_count = 0;
+                } catch (Exception e) {
+                    String msg = "Unable to do REST API Upload: " + e.getMessage() + " marking record: " + (any_successes ? "succeeded" : "failed");
+                    handleRestFailure(msg);
+                }
+            }
+            return any_successes;
+        }
+
+        private void doLegacyRESTUploadTo(NightscoutService nightscoutService, List<BgReading> glucoseDataSets) throws Exception {
+            for (BgReading record : glucoseDataSets) {
+                Response<ResponseBody> r = nightscoutService.upload(populateLegacyAPIEntry(record)).execute();
+                if (!r.isSuccessful()) throw new UploaderException(r.message(), r.code());
+
+            }
+            try {
+                postDeviceStatus(nightscoutService, null);
+            } catch (Exception e) {
+                Log.e(TAG, "Ignoring legacy devicestatus post exception: " + e);
+            }
+        }
+
+        private void doRESTUploadTo(NightscoutService nightscoutService, String secret, List<BgReading> glucoseDataSets, List<BloodTest> meterRecords, List<Calibration> calRecords) throws Exception {
+            final JSONArray array = new JSONArray();
+
+            for (BgReading record : glucoseDataSets) {
+                populateV1APIBGEntry(array, record);
+            }
+            for (BloodTest record : meterRecords) {
+                populateV1APIMeterReadingEntry(array, record);
+            }
+            for (Calibration record : calRecords) {
+                final BloodTest dupe = BloodTest.getForPreciseTimestamp(record.timestamp, 60000);
+                if (dupe == null) {
+                    populateV1APIMeterReadingEntry(array, record); // also add calibrations as meter records
                 } else {
-                    throw new Exception("Unexpected baseURI: " + baseURI);
+                    Log.d(TAG, "Found duplicate blood test entry for this calibration record: " + record.bg + " vs " + dupe.mgdl + " mg/dl");
                 }
+                populateV1APICalibrationEntry(array, record);
+            }
 
-                final Retrofit retrofit = new Retrofit.Builder().baseUrl(baseURL).client(client).build();
-                final NightscoutService nightscoutService = retrofit.create(NightscoutService.class);
+            if (array.length() > 0) {//KS
+                final RequestBody body = RequestBody.create(MediaType.parse("application/json"), array.toString());
+                final Response<ResponseBody> r = nightscoutService.upload(secret, body).execute();
+                if (!r.isSuccessful()) throw new UploaderException(r.message(), r.code());
+                checkGzipSupport(r);
+                try {
+                    postDeviceStatus(nightscoutService, secret);
+                } catch (Exception e) {
+                    Log.e(TAG, "Ignoring devicestatus post exception: " + e);
+                }
+            }
 
-                if (apiVersion == 1) {
-                    String hashedSecret = Hashing.sha1().hashBytes(secret.getBytes(Charsets.UTF_8)).toString();
-                    doStatusUpdate(nightscoutService, retrofit.baseUrl().url().toString(), hashedSecret); // update status if needed
-                    doRESTUploadTo(nightscoutService, hashedSecret, glucoseDataSets, meterRecords, calRecords);
+            try {
+                if (Pref.getBooleanDefaultFalse("send_treatments_to_nightscout")) {
+                    postTreatments(nightscoutService, secret);
                 } else {
-                    doLegacyRESTUploadTo(nightscoutService, glucoseDataSets);
+                    Log.d(TAG,"Skipping treatment upload due to preference disabled");
                 }
-                any_successes = true;
-                last_success_time = JoH.tsl();
-                last_exception_count = 0;
             } catch (Exception e) {
-                String msg = "Unable to do REST API Upload: " + e.getMessage() + " marking record: " + (any_successes ? "succeeded" : "failed");
-                handleRestFailure(msg);
+                Log.e(TAG, "Exception uploading REST API treatments: ", e);
+                if (e.getMessage().equals("Not Found")) {
+                    final String msg = "Please ensure careportal plugin is enabled on nightscout for treatment upload!";
+                    Log.wtf(TAG, msg);
+                    Home.toaststaticnext(msg);
+                    handleRestFailure(msg);
+                }
             }
-        }
-        return any_successes;
-    }
-
-    private void doLegacyRESTUploadTo(NightscoutService nightscoutService, List<BgReading> glucoseDataSets) throws Exception {
-        for (BgReading record : glucoseDataSets) {
-            Response<ResponseBody> r = nightscoutService.upload(populateLegacyAPIEntry(record)).execute();
-            if (!r.isSuccessful()) throw new UploaderException(r.message(), r.code());
-
-        }
-        try {
-            postDeviceStatus(nightscoutService, null);
-        } catch (Exception e) {
-            Log.e(TAG, "Ignoring legacy devicestatus post exception: " + e);
-        }
-    }
-
-    private void doRESTUploadTo(NightscoutService nightscoutService, String secret, List<BgReading> glucoseDataSets, List<BloodTest> meterRecords, List<Calibration> calRecords) throws Exception {
-        final JSONArray array = new JSONArray();
-
-        for (BgReading record : glucoseDataSets) {
-            populateV1APIBGEntry(array, record);
-        }
-        for (BloodTest record : meterRecords) {
-            populateV1APIMeterReadingEntry(array, record);
-        }
-        for (Calibration record : calRecords) {
-            final BloodTest dupe = BloodTest.getForPreciseTimestamp(record.timestamp, 60000);
-            if (dupe == null) {
-                populateV1APIMeterReadingEntry(array, record); // also add calibrations as meter records
-            } else {
-                Log.d(TAG, "Found duplicate blood test entry for this calibration record: " + record.bg + " vs " + dupe.mgdl + " mg/dl");
-            }
-            populateV1APICalibrationEntry(array, record);
-        }
-
-        if (array.length() > 0) {//KS
-            final RequestBody body = RequestBody.create(MediaType.parse("application/json"), array.toString());
-            final Response<ResponseBody> r = nightscoutService.upload(secret, body).execute();
-            if (!r.isSuccessful()) throw new UploaderException(r.message(), r.code());
-            checkGzipSupport(r);
-            try {
-                postDeviceStatus(nightscoutService, secret);
-            } catch (Exception e) {
-                Log.e(TAG, "Ignoring devicestatus post exception: " + e);
-            }
-        }
-
-        try {
-            if (Pref.getBooleanDefaultFalse("send_treatments_to_nightscout")) {
-                postTreatments(nightscoutService, secret);
-            } else {
-                Log.d(TAG, "Skipping treatment upload due to preference disabled");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Exception uploading REST API treatments: ", e);
-            if (e.getMessage().equals("Not Found")) {
-                final String msg = "Please ensure careportal plugin is enabled on nightscout for treatment upload!";
-                Log.wtf(TAG, msg);
-                Home.toaststaticnext(msg);
-                handleRestFailure(msg);
-            }
-        }
-        // TODO we may want to check nightscout version before trying to upload!!
-        // TODO in the future we may want to merge these in to a single post
-        if (Pref.getBooleanDefaultFalse("use_pebble_health") && (Home.get_engineering_mode())) {
-            try {
-                postHeartRate(nightscoutService, secret);
-                postStepsCount(nightscoutService, secret);
-                postMotionTracking(nightscoutService, secret);
-            } catch (Exception e) {
-                if (JoH.ratelimit("heartrate-upload-exception", 3600)) {
-                    Log.e(TAG, "Exception uploading REST API heartrate: " + e.getMessage());
+            // TODO we may want to check nightscout version before trying to upload!!
+            // TODO in the future we may want to merge these in to a single post
+            if (Pref.getBooleanDefaultFalse("use_pebble_health") && (Home.get_engineering_mode())) {
+                try {
+                    postHeartRate(nightscoutService, secret);
+                    postStepsCount(nightscoutService, secret);
+                    postMotionTracking(nightscoutService, secret);
+                } catch (Exception e) {
+                  if (JoH.ratelimit("heartrate-upload-exception", 3600)) {
+                      Log.e(TAG, "Exception uploading REST API heartrate: " + e.getMessage());
+                  }
                 }
             }
         }
-    }
 
     private static synchronized void handleRestFailure(String msg) {
         last_exception = msg;
@@ -623,12 +620,12 @@ public class NightscoutUploader {
         if (record != null) {//KS
             json.put("date", record.timestamp);
             json.put("dateString", format.format(record.timestamp));
-            if (prefs.getBoolean("cloud_storage_api_use_best_glucose", false)) {
+            if(prefs.getBoolean("cloud_storage_api_use_best_glucose", false)){
                 json.put("sgv", (int) record.getDg_mgdl());
                 try {
                     json.put("delta", new BigDecimal(record.getDg_slope() * 5 * 60 * 1000).setScale(3, BigDecimal.ROUND_HALF_UP));
                 } catch (NumberFormatException e) {
-                    UserError.Log.e(TAG, "Problem calculating delta from getDg_slope() for Nightscout REST Upload, skipping");
+                        UserError.Log.e(TAG, "Problem calculating delta from getDg_slope() for Nightscout REST Upload, skipping");
                 }
                 json.put("direction", record.getDg_deltaName());
             } else {
@@ -636,7 +633,7 @@ public class NightscoutUploader {
                 try {
                     json.put("delta", new BigDecimal(record.currentSlope() * 5 * 60 * 1000).setScale(3, BigDecimal.ROUND_HALF_UP)); // jamorham for automation
                 } catch (NumberFormatException e) {
-                    UserError.Log.e(TAG, "Problem calculating delta from currentSlope() for Nightscout REST Upload, skipping");
+                        UserError.Log.e(TAG, "Problem calculating delta from currentSlope() for Nightscout REST Upload, skipping");
                 }
                 json.put("direction", record.slopeName());
             }
@@ -647,90 +644,90 @@ public class NightscoutUploader {
             json.put("noise", record.noiseValue());
             json.put("sysTime", format.format(record.timestamp));
             array.put(json);
-        } else
+        }
+        else
             Log.e(TAG, "doRESTUploadTo BG record is null.");
     }
 
-    private RequestBody populateLegacyAPIEntry(BgReading record) throws Exception {
-        JSONObject json = new JSONObject();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-        format.setTimeZone(TimeZone.getDefault());
-        json.put("device", getDeviceString(record));
-        json.put("date", record.timestamp);
-        json.put("dateString", format.format(record.timestamp));
-        json.put("sgv", (int) record.calculated_value);
-        json.put("direction", record.slopeName());
-        return RequestBody.create(MediaType.parse("application/json"), json.toString());
-    }
-
-    private void populateV1APIMeterReadingEntry(JSONArray array, Calibration record) throws Exception {
-        if (record == null) {
-            Log.e(TAG, "Received null calibration record in populateV1ApiMeterReadingEntry !");
-            return;
+        private RequestBody populateLegacyAPIEntry(BgReading record) throws Exception {
+            JSONObject json = new JSONObject();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            format.setTimeZone(TimeZone.getDefault());
+            json.put("device", getDeviceString(record));
+            json.put("date", record.timestamp);
+            json.put("dateString", format.format(record.timestamp));
+            json.put("sgv", (int)record.calculated_value);
+            json.put("direction", record.slopeName());
+            return RequestBody.create(MediaType.parse("application/json"), json.toString());
         }
-        JSONObject json = new JSONObject();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-        format.setTimeZone(TimeZone.getDefault());
-        json.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
-        json.put("type", "mbg");
-        json.put("date", record.timestamp);
-        json.put("dateString", format.format(record.timestamp));
-        json.put("mbg", record.bg);
-        json.put("sysTime", format.format(record.timestamp));
-        array.put(json);
-    }
 
-    private void populateV1APIMeterReadingEntry(JSONArray array, BloodTest record) throws Exception {
-        if (record == null) {
-            Log.e(TAG, "Received null bloodtest record in populateV1ApiMeterReadingEntry !");
-            return;
+        private void populateV1APIMeterReadingEntry(JSONArray array, Calibration record) throws Exception {
+            if (record == null) {
+                Log.e(TAG, "Received null calibration record in populateV1ApiMeterReadingEntry !");
+                return;
+            }
+            JSONObject json = new JSONObject();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            format.setTimeZone(TimeZone.getDefault());
+            json.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
+            json.put("type", "mbg");
+            json.put("date", record.timestamp);
+            json.put("dateString", format.format(record.timestamp));
+            json.put("mbg", record.bg);
+            json.put("sysTime", format.format(record.timestamp));
+            array.put(json);
         }
-        JSONObject json = new JSONObject();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-        format.setTimeZone(TimeZone.getDefault());
-        json.put("device", record.source);
-        json.put("type", "mbg");
-        json.put("date", record.timestamp);
-        json.put("dateString", format.format(record.timestamp));
-        json.put("mbg", record.mgdl);
-        json.put("sysTime", format.format(record.timestamp));
-        array.put(json);
-    }
 
-
-    private void populateV1APICalibrationEntry(JSONArray array, Calibration record) throws Exception {
-        if (record == null) {
-            Log.e(TAG, "Received null calibration record in populateV1ApiCalibrationEntry !");
-            return;
+        private void populateV1APIMeterReadingEntry(JSONArray array, BloodTest record) throws Exception {
+            if (record == null) {
+                Log.e(TAG, "Received null bloodtest record in populateV1ApiMeterReadingEntry !");
+                return;
+            }
+            JSONObject json = new JSONObject();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            format.setTimeZone(TimeZone.getDefault());
+            json.put("device", record.source);
+            json.put("type", "mbg");
+            json.put("date", record.timestamp);
+            json.put("dateString", format.format(record.timestamp));
+            json.put("mbg", record.mgdl);
+            json.put("sysTime", format.format(record.timestamp));
+            array.put(json);
         }
-        //do not upload undefined slopes
-        if (record.slope == 0d) return;
 
-        JSONObject json = new JSONObject();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-        format.setTimeZone(TimeZone.getDefault());
-        json.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
-        json.put("type", "cal");
-        json.put("date", record.timestamp);
-        json.put("dateString", format.format(record.timestamp));
-        if (record.check_in) {
-            json.put("slope", (record.first_slope));
-            json.put("intercept", ((record.first_intercept)));
-            json.put("scale", record.first_scale);
-        } else {
-            json.put("slope", (1000 / record.slope));
-            json.put("intercept", ((record.intercept * -1000) / (record.slope)));
-            json.put("scale", 1);
+
+        private void populateV1APICalibrationEntry(JSONArray array, Calibration record) throws Exception {
+            if (record == null) {
+                Log.e(TAG, "Received null calibration record in populateV1ApiCalibrationEntry !");
+                return;
+            }
+            //do not upload undefined slopes
+            if(record.slope == 0d) return;
+
+            JSONObject json = new JSONObject();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            format.setTimeZone(TimeZone.getDefault());
+            json.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
+            json.put("type", "cal");
+            json.put("date", record.timestamp);
+            json.put("dateString", format.format(record.timestamp));
+            if(record.check_in) {
+                json.put("slope", (record.first_slope));
+                json.put("intercept", ((record.first_intercept)));
+                json.put("scale", record.first_scale);
+            } else {
+                json.put("slope", (1000/record.slope));
+                json.put("intercept", ((record.intercept * -1000) / (record.slope)));
+                json.put("scale", 1);
+            }
+            json.put("sysTime", format.format(record.timestamp));
+            array.put(json);
         }
-        json.put("sysTime", format.format(record.timestamp));
-        array.put(json);
-    }
 
     private void populateV1APITreatmentEntry(JSONArray array, Treatments treatment) throws Exception {
 
         if (treatment == null) return;
-        if (treatment.enteredBy != null && ((treatment.enteredBy.endsWith(VIA_NIGHTSCOUT_TAG)) || (treatment.enteredBy.contains(VIA_NIGHTSCOUT_LOADER_TAG))))
-            return; // don't send back to nightscout what came from there
+        if (treatment.enteredBy != null && ((treatment.enteredBy.endsWith(VIA_NIGHTSCOUT_TAG)) || (treatment.enteredBy.contains(VIA_NIGHTSCOUT_LOADER_TAG)))) return; // don't send back to nightscout what came from there
         final JSONObject record = new JSONObject();
         final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
         record.put("timestamp", treatment.timestamp);
@@ -850,11 +847,10 @@ public class NightscoutUploader {
                             Log.d(TAG, "Success for RESTAPI treatment upsert upload: " + match_uuid);
 
                             for (UploaderQueue up : tups) {
-                                if (d)
-                                    Log.d(TAG, "upsert: " + match_uuid + " / " + up.reference_uuid + " " + up.action + " " + up.reference_id);
+                                if (d) Log.d(TAG, "upsert: " + match_uuid + " / " + up.reference_uuid + " " + up.action + " " + up.reference_id);
                                 if ((up.action.equals("update") || (up.action.equals("insert")))
                                         && (up.reference_uuid.equals(match_uuid) || (uuid_to_id(up.reference_uuid).equals(match_uuid)))) {
-                                    if (d) Log.d(TAG, "upsert: matched");
+                                    if( d) Log.d(TAG, "upsert: matched");
                                     up.completed(THIS_QUEUE); // approve all types for this queue
                                     break;
                                 }
@@ -911,9 +907,9 @@ public class NightscoutUploader {
 
                 if (!r.isSuccessful()) {
                     activityErrorCount++;
-                    if (JoH.ratelimit("heartrate-unable-upload", 3600)) {
-                        UserError.Log.e(TAG, "Unable to upload heart-rate data to Nightscout - check nightscout version");
-                    }
+                   if (JoH.ratelimit("heartrate-unable-upload",3600)) {
+                       UserError.Log.e(TAG, "Unable to upload heart-rate data to Nightscout - check nightscout version");
+                   }
                     throw new UploaderException(r.message(), r.code());
                 } else {
                     PersistentStore.setLong(STORE_COUNTER, highest_timestamp);
@@ -925,6 +921,7 @@ public class NightscoutUploader {
             UserError.Log.e(TAG, "Api secret is null");
         }
     }
+
 
 
     private void postStepsCount(NightscoutService nightscoutService, String apiSecret) throws Exception {
@@ -987,8 +984,7 @@ public class NightscoutUploader {
             if (readings.size() > 0) {
                 for (ActivityRecognizedService.motionData reading : readings) {
                     counter++;
-                    if (counter > (MAX_ACTIVITY_RECORDS / Math.min(1, Math.max(activityErrorCount, MAX_ACTIVITY_RECORDS / 10))))
-                        break;
+                    if (counter > (MAX_ACTIVITY_RECORDS / Math.min(1, Math.max(activityErrorCount, MAX_ACTIVITY_RECORDS / 10)))) break;
                     final JSONObject json = new JSONObject();
                     json.put("type", "motion-class");
 
@@ -1142,206 +1138,205 @@ public class NightscoutUploader {
     }
 
 
-    private boolean doMongoUpload(SharedPreferences prefs, List<BgReading> glucoseDataSets,
-                                  List<Calibration> meterRecords, List<Calibration> calRecords, List<TransmitterData> transmittersData,
-                                  List<LibreBlock> libreBlock) {
-        final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
-        format.setTimeZone(TimeZone.getDefault());
+        private boolean doMongoUpload(SharedPreferences prefs, List<BgReading> glucoseDataSets,
+                                      List<Calibration> meterRecords,  List<Calibration> calRecords, List<TransmitterData> transmittersData,
+                                      List<LibreBlock> libreBlock) {
+            final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
+            format.setTimeZone(TimeZone.getDefault());
 
-        final String dbURI = prefs.getString("cloud_storage_mongodb_uri", null);
-        if (dbURI != null) {
-            try {
-                final URI uri = new URI(dbURI.trim());
-                if ((uri.getHost().startsWith("192.168.")) && prefs.getBoolean("skip_lan_uploads_when_no_lan", true) && (!JoH.isLANConnected())) {
-                    Log.d(TAG, "Skipping mongo upload to: " + dbURI + " due to no LAN connection");
-                    return false;
-                }
-            } catch (URISyntaxException e) {
-                UserError.Log.e(TAG, "Invalid mongo URI: " + e);
-            }
-        }
-
-        final String collectionName = prefs.getString("cloud_storage_mongodb_collection", null);
-        final String dsCollectionName = prefs.getString("cloud_storage_mongodb_device_status_collection", "devicestatus");
-
-        if (dbURI != null && collectionName != null) {
-            try {
-
-                // connect to db
-                MongoClientURI uri = new MongoClientURI(dbURI.trim() + "?socketTimeoutMS=180000");
-                MongoClient client = new MongoClient(uri);
-
-                // get db
-                DB db = client.getDB(uri.getDatabase());
-
-                // get collection
-                DBCollection dexcomData = db.getCollection(collectionName.trim());
-
+            final String dbURI = prefs.getString("cloud_storage_mongodb_uri", null);
+            if (dbURI != null) {
                 try {
-                    Log.i(TAG, "The number of EGV records being sent to MongoDB is " + glucoseDataSets.size());
-                    for (BgReading record : glucoseDataSets) {
-                        // make db object
-                        BasicDBObject testData = new BasicDBObject();
-                        testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
-                        if (record != null) {//KS
-                            testData.put("date", record.timestamp);
-                            testData.put("dateString", format.format(record.timestamp));
-                            testData.put("sgv", Math.round(record.calculated_value));
-                            testData.put("direction", record.slopeName());
-                            testData.put("type", "sgv");
-                            testData.put("filtered", record.ageAdjustedFiltered() * 1000);
-                            testData.put("unfiltered", record.usedRaw() * 1000);
-                            testData.put("rssi", 100);
-                            testData.put("noise", record.noiseValue());
-                            dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
-                        } else
-                            Log.e(TAG, "MongoDB BG record is null.");
+                    final URI uri = new URI(dbURI.trim());
+                    if ((uri.getHost().startsWith("192.168.")) && prefs.getBoolean("skip_lan_uploads_when_no_lan", true) && (!JoH.isLANConnected())) {
+                        Log.d(TAG, "Skipping mongo upload to: " + dbURI + " due to no LAN connection");
+                        return false;
                     }
+                } catch (URISyntaxException e) {
+                    UserError.Log.e(TAG, "Invalid mongo URI: " + e);
+                }
+            }
 
-                    Log.i(TAG, "REST - The number of MBG records being sent to MongoDB is " + meterRecords.size());
-                    for (Calibration meterRecord : meterRecords) {
-                        // make db object
-                        BasicDBObject testData = new BasicDBObject();
-                        testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
-                        testData.put("type", "mbg");
-                        testData.put("date", meterRecord.timestamp);
-                        testData.put("dateString", format.format(meterRecord.timestamp));
-                        testData.put("mbg", meterRecord.bg);
-                        dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
-                    }
-                    Log.i(TAG, "REST - Finshed upload of mbg");
+            final String collectionName = prefs.getString("cloud_storage_mongodb_collection", null);
+            final String dsCollectionName = prefs.getString("cloud_storage_mongodb_device_status_collection", "devicestatus");
 
-                    for (Calibration calRecord : calRecords) {
-                        //do not upload undefined slopes
-                        if (calRecord.slope == 0d) break;
-                        // make db object
-                        BasicDBObject testData = new BasicDBObject();
-                        testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
-                        testData.put("date", calRecord.timestamp);
-                        testData.put("dateString", format.format(calRecord.timestamp));
-                        if (calRecord.check_in) {
-                            testData.put("slope", (calRecord.first_slope));
-                            testData.put("intercept", ((calRecord.first_intercept)));
-                            testData.put("scale", calRecord.first_scale);
-                        } else {
-                            testData.put("slope", (1000 / calRecord.slope));
-                            testData.put("intercept", ((calRecord.intercept * -1000) / (calRecord.slope)));
-                            testData.put("scale", 1);
-                        }
-                        testData.put("type", "cal");
-                        dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
-                    }
-                    DBCollection libreCollection = db.getCollection("libre");
-                    for (LibreBlock libreBlockEntry : libreBlock) {
+            if (dbURI != null && collectionName != null) {
+                try {
 
+                    // connect to db
+                    MongoClientURI uri = new MongoClientURI(dbURI.trim()+"?socketTimeoutMS=180000");
+                    MongoClient client = new MongoClient(uri);
 
-                        Log.d(TAG, "uploading new item to mongo");
-                        // Checksum might be wrong, for libre 2 or libre us 14 days.
-                        boolean ChecksumOk = LibreUtils.verify(libreBlockEntry.blockbytes, libreBlockEntry.patchInfo);
+                    // get db
+                    DB db = client.getDB(uri.getDatabase());
 
-                        // make db object
-                        BasicDBObject testData = new BasicDBObject();
-                        testData.put("SensorId", PersistentStore.getString("LibreSN"));
-                        testData.put("CaptureDateTime", libreBlockEntry.timestamp);
-                        testData.put("BlockBytes", Base64.encodeToString(libreBlockEntry.blockbytes, Base64.NO_WRAP));
-                        if (libreBlockEntry.patchUid != null && libreBlockEntry.patchUid.length != 0) {
-                            testData.put("patchUid", Base64.encodeToString(libreBlockEntry.patchUid, Base64.NO_WRAP));
-                        }
-                        if (libreBlockEntry.patchInfo != null && libreBlockEntry.patchInfo.length != 0) {
-                            testData.put("patchInfo", Base64.encodeToString(libreBlockEntry.patchInfo, Base64.NO_WRAP));
-                        }
-                        testData.put("ChecksumOk", ChecksumOk ? 1 : 0);
-                        testData.put("Uploaded", 1);
-                        testData.put("UploaderBatteryLife", getBatteryLevel());
-                        testData.put("DebugInfo", android.os.Build.MODEL + " " + new Date(libreBlockEntry.timestamp).toLocaleString());
+                    // get collection
+                    DBCollection dexcomData = db.getCollection(collectionName.trim());
 
-                        try {
-                            testData.put("TomatoBatteryLife", Integer.parseInt(PersistentStore.getString("Tomatobattery")));
-                        } catch (NumberFormatException e) {
-                            Log.e(TAG, "Error reading battery daya" + PersistentStore.getString("Tomatobattery"));
-                        }
-                        testData.put("FwVersion", PersistentStore.getString("TomatoFirmware"));
-                        testData.put("HwVersion", PersistentStore.getString("TomatoHArdware"));
-
-                        WriteResult wr = libreCollection.insert(testData, WriteConcern.ACKNOWLEDGED);
-                        Log.d(TAG, "uploaded libreblock data with " + new Date(libreBlockEntry.timestamp).toLocaleString() + " wr = " + wr);
-                    }
-
-                    // TODO: quick port from original code, revisit before release
-                    DBCollection dsCollection = db.getCollection(dsCollectionName);
-                    BasicDBObject devicestatus = new BasicDBObject();
-                    devicestatus.put("uploaderBattery", getBatteryLevel());
-                    devicestatus.put("created_at", format.format(System.currentTimeMillis()));
-                    dsCollection.insert(devicestatus, WriteConcern.UNACKNOWLEDGED);
-
-                    // treatments mongo sync using unified queue
-                    Log.d(TAG, "Starting treatments mongo direct");
-                    final long THIS_QUEUE = UploaderQueue.MONGO_DIRECT;
-                    final DBCollection treatmentDb = db.getCollection("treatments");
-                    final List<UploaderQueue> tups = UploaderQueue.getPendingbyType(Treatments.class.getSimpleName(), THIS_QUEUE);
-                    if (tups != null) {
-                        for (UploaderQueue up : tups) {
-                            if ((up.action.equals("insert") || (up.action.equals("update")))) {
-                                Treatments treatment = Treatments.byid(up.reference_id);
-                                if (treatment != null) {
-                                    BasicDBObject record = new BasicDBObject();
-                                    record.put("timestamp", treatment.timestamp);
-                                    record.put("eventType", treatment.eventType);
-                                    record.put("enteredBy", treatment.enteredBy);
-                                    if (treatment.notes != null)
-                                        record.put("notes", treatment.notes);
-                                    record.put("uuid", treatment.uuid);
-                                    record.put("carbs", treatment.carbs);
-                                    record.put("insulin", treatment.insulin);
-                                    if (treatment.insulinJSON != null) {
-                                        record.put("insulinInjections", treatment.insulinJSON);
-                                    }
-                                    record.put("created_at", treatment.created_at);
-                                    final BasicDBObject searchQuery = new BasicDBObject().append("uuid", treatment.uuid);
-                                    //treatmentDb.insert(record, WriteConcern.UNACKNOWLEDGED);
-                                    Log.d(TAG, "Sending upsert for: " + treatment.toJSON());
-                                    treatmentDb.update(searchQuery, record, true, false);
-                                } else {
-                                    Log.d(TAG, "Got null for treatment id: " + up.reference_id);
-                                }
-                                up.completed(THIS_QUEUE);
-                            } else if (up.action.equals("delete")) {
-                                if (up.reference_uuid != null) {
-                                    Log.d(TAG, "Processing treatment delete mongo sync for: " + up.reference_uuid);
-                                    final BasicDBObject searchQuery = new BasicDBObject().append("uuid", up.reference_uuid);
-                                    Log.d(TAG, treatmentDb.remove(searchQuery, WriteConcern.UNACKNOWLEDGED).toString());
-
-                                }
-                                up.completed(THIS_QUEUE);
-                            } else {
-                                Log.e(TAG, "Unsupported operation type for treatment: " + up.action);
+                    try {
+                        Log.i(TAG, "The number of EGV records being sent to MongoDB is " + glucoseDataSets.size());
+                        for (BgReading record : glucoseDataSets) {
+                            // make db object
+                            BasicDBObject testData = new BasicDBObject();
+                            testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
+                            if (record != null) {//KS
+                                testData.put("date", record.timestamp);
+                                testData.put("dateString", format.format(record.timestamp));
+                                testData.put("sgv", Math.round(record.calculated_value));
+                                testData.put("direction", record.slopeName());
+                                testData.put("type", "sgv");
+                                testData.put("filtered", record.ageAdjustedFiltered() * 1000);
+                                testData.put("unfiltered", record.usedRaw() * 1000);
+                                testData.put("rssi", 100);
+                                testData.put("noise", record.noiseValue());
+                                dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
                             }
+                            else
+                                Log.e(TAG, "MongoDB BG record is null.");
                         }
-                        Log.d(TAG, "Processed " + tups.size() + " Treatment mongo direct upload records");
+
+                        Log.i(TAG, "REST - The number of MBG records being sent to MongoDB is " + meterRecords.size());
+                        for (Calibration meterRecord : meterRecords) {
+                            // make db object
+                            BasicDBObject testData = new BasicDBObject();
+                            testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
+                            testData.put("type", "mbg");
+                            testData.put("date", meterRecord.timestamp);
+                            testData.put("dateString", format.format(meterRecord.timestamp));
+                            testData.put("mbg", meterRecord.bg);
+                            dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
+                        }
+                        Log.i(TAG, "REST - Finshed upload of mbg");
+
+                        for (Calibration calRecord : calRecords) {
+                            //do not upload undefined slopes
+                            if(calRecord.slope == 0d) break;
+                            // make db object
+                            BasicDBObject testData = new BasicDBObject();
+                            testData.put("device", "xDrip-" + prefs.getString("dex_collection_method", "BluetoothWixel"));
+                            testData.put("date", calRecord.timestamp);
+                            testData.put("dateString", format.format(calRecord.timestamp));
+                            if (calRecord.check_in) {
+                                testData.put("slope", (calRecord.first_slope));
+                                testData.put("intercept", ((calRecord.first_intercept)));
+                                testData.put("scale", calRecord.first_scale);
+                            } else {
+                                testData.put("slope",  (1000/calRecord.slope));
+                                testData.put("intercept", ((calRecord.intercept * -1000) / (calRecord.slope)));
+                                testData.put("scale", 1);
+                            }
+                            testData.put("type", "cal");
+                            dexcomData.insert(testData, WriteConcern.UNACKNOWLEDGED);
+                        }
+                        DBCollection libreCollection = db.getCollection("libre");
+                        for (LibreBlock libreBlockEntry : libreBlock) {
+
+
+                            Log.d(TAG, "uploading new item to mongo");
+                            // Checksum might be wrong, for libre 2 or libre us 14 days.
+                            boolean ChecksumOk = LibreUtils.verify(libreBlockEntry.blockbytes, libreBlockEntry.patchInfo);
+
+                            // make db object
+                            BasicDBObject testData = new BasicDBObject();
+                            testData.put("SensorId", PersistentStore.getString("LibreSN"));
+                            testData.put("CaptureDateTime", libreBlockEntry.timestamp);
+                            testData.put("BlockBytes",Base64.encodeToString(libreBlockEntry.blockbytes, Base64.NO_WRAP));
+                            if(libreBlockEntry.patchUid != null && libreBlockEntry.patchUid.length != 0) {
+                                testData.put("patchUid",Base64.encodeToString(libreBlockEntry.patchUid, Base64.NO_WRAP));
+                            }
+                            if(libreBlockEntry.patchInfo != null && libreBlockEntry.patchInfo.length != 0) {
+                               testData.put("patchInfo",Base64.encodeToString(libreBlockEntry.patchInfo, Base64.NO_WRAP));
+                            }
+                            testData.put("ChecksumOk",ChecksumOk ? 1 : 0);
+                            testData.put("Uploaded", 1);
+                            testData.put("UploaderBatteryLife",getBatteryLevel());
+                            testData.put("DebugInfo", android.os.Build.MODEL + " " + new Date(libreBlockEntry.timestamp).toLocaleString());
+
+                            try {
+                                testData.put("TomatoBatteryLife", Integer.parseInt(PersistentStore.getString("Tomatobattery")));
+                            } catch (NumberFormatException e) {
+                                Log.e(TAG, "Error reading battery daya" + PersistentStore.getString("Tomatobattery") );
+                            }
+                            testData.put("FwVersion", PersistentStore.getString("TomatoFirmware"));
+                            testData.put("HwVersion", PersistentStore.getString("TomatoHArdware"));
+
+                            WriteResult wr = libreCollection.insert(testData, WriteConcern.ACKNOWLEDGED);
+                            Log.d(TAG, "uploaded libreblock data with " + new Date(libreBlockEntry.timestamp).toLocaleString()+ " wr = " + wr);
+                        }
+
+                        // TODO: quick port from original code, revisit before release
+                        DBCollection dsCollection = db.getCollection(dsCollectionName);
+                        BasicDBObject devicestatus = new BasicDBObject();
+                        devicestatus.put("uploaderBattery", getBatteryLevel());
+                        devicestatus.put("created_at", format.format(System.currentTimeMillis()));
+                        dsCollection.insert(devicestatus, WriteConcern.UNACKNOWLEDGED);
+
+                        // treatments mongo sync using unified queue
+                        Log.d(TAG,"Starting treatments mongo direct");
+                        final long THIS_QUEUE = UploaderQueue.MONGO_DIRECT;
+                        final DBCollection treatmentDb = db.getCollection("treatments");
+                        final List<UploaderQueue> tups = UploaderQueue.getPendingbyType(Treatments.class.getSimpleName(), THIS_QUEUE);
+                        if (tups != null) {
+                            for (UploaderQueue up : tups) {
+                                if ((up.action.equals("insert") || (up.action.equals("update")))) {
+                                    Treatments treatment = Treatments.byid(up.reference_id);
+                                    if (treatment != null) {
+                                        BasicDBObject record = new BasicDBObject();
+                                        record.put("timestamp", treatment.timestamp);
+                                        record.put("eventType", treatment.eventType);
+                                        record.put("enteredBy", treatment.enteredBy);
+                                        if (treatment.notes != null) record.put("notes", treatment.notes);
+                                        record.put("uuid", treatment.uuid);
+                                        record.put("carbs", treatment.carbs);
+                                        record.put("insulin", treatment.insulin);
+                                        if (treatment.insulinJSON != null) {
+                                            record.put("insulinInjections", treatment.insulinJSON);
+                                        }
+                                        record.put("created_at", treatment.created_at);
+                                        final BasicDBObject searchQuery = new BasicDBObject().append("uuid", treatment.uuid);
+                                        //treatmentDb.insert(record, WriteConcern.UNACKNOWLEDGED);
+                                        Log.d(TAG, "Sending upsert for: " + treatment.toJSON());
+                                        treatmentDb.update(searchQuery, record, true, false);
+                                    } else {
+                                        Log.d(TAG, "Got null for treatment id: " + up.reference_id);
+                                    }
+                                    up.completed(THIS_QUEUE);
+                                } else if (up.action.equals("delete")) {
+                                    if (up.reference_uuid != null) {
+                                        Log.d(TAG,"Processing treatment delete mongo sync for: "+up.reference_uuid);
+                                        final BasicDBObject searchQuery = new BasicDBObject().append("uuid", up.reference_uuid);
+                                        Log.d(TAG,treatmentDb.remove(searchQuery, WriteConcern.UNACKNOWLEDGED).toString());
+
+                                    }
+                                    up.completed(THIS_QUEUE);
+                                } else {
+                                    Log.e(TAG, "Unsupported operation type for treatment: " + up.action);
+                                }
+                            }
+                            Log.d(TAG, "Processed " + tups.size() + " Treatment mongo direct upload records");
+                        }
+
+                        client.close();
+
+                        failurecount=0;
+                        return true;
+
+                    } catch (Exception e) {
+                        Log.e(TAG, "Unable to upload data to mongo " + e.getMessage());
+                        failurecount++;
+                        if (failurecount>4)
+                        {
+                            Home.toaststaticnext("Mongo "+failurecount+" up fails: "+e.getMessage().substring(0,51));
+                        }
+                    } finally {
+                        if(client != null) { client.close(); }
                     }
-
-                    client.close();
-
-                    failurecount = 0;
-                    return true;
-
                 } catch (Exception e) {
                     Log.e(TAG, "Unable to upload data to mongo " + e.getMessage());
-                    failurecount++;
-                    if (failurecount > 4) {
-                        Home.toaststaticnext("Mongo " + failurecount + " up fails: " + e.getMessage().substring(0, 51));
-                    }
-                } finally {
-                    if (client != null) {
-                        client.close();
-                    }
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Unable to upload data to mongo " + e.getMessage());
             }
+            return false;
         }
-        return false;
-    }
 
     public int getBatteryLevel() {
         return NightscoutBatteryDevice.PHONE.getBatteryLevel(mContext);
@@ -1364,9 +1359,7 @@ public class NightscoutUploader {
         }
     }
 
-    /**
-     * Prints TLS Version and Cipher Suite for SSL Calls through OkHttp3
-     */
+    /** Prints TLS Version and Cipher Suite for SSL Calls through OkHttp3 */
     public class SSLHandshakeInterceptor implements Interceptor {
 
         @Override
@@ -1407,18 +1400,15 @@ public class NightscoutUploader {
 
         private RequestBody gzip(final RequestBody body) {
             return new RequestBody() {
-                @Override
-                public MediaType contentType() {
+                @Override public MediaType contentType() {
                     return body.contentType();
                 }
 
-                @Override
-                public long contentLength() {
+                @Override public long contentLength() {
                     return -1; // We don't know the compressed length in advance!
                 }
 
-                @Override
-                public void writeTo(BufferedSink sink) throws IOException {
+                @Override public void writeTo(BufferedSink sink) throws IOException {
                     BufferedSink gzipSink = Okio.buffer(new GzipSink(sink));
                     body.writeTo(gzipSink);
                     gzipSink.close();
