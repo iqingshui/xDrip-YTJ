@@ -61,6 +61,11 @@ public class xdrip extends Application {
 
     @Override
     public void onCreate() {
+
+
+        Intent intent = new Intent(this, MyService.class);
+        startForegroundService(intent);
+
         xdrip.context = getApplicationContext();
         super.onCreate();
         JodaTimeAndroid.init(this);
