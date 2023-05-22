@@ -7,6 +7,8 @@
 
     <uses-sdk tools:overrideLibrary="androidx.health.connect.client, info.nightscout.sdk" />
     <!-- To receive data from HAPP. -->
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
     <uses-permission android:name="com.eveningoutpost.dexdrip.permissions.RECEIVE_EXTERNAL_STATUSLINE" /> <!-- To receive data from Aidex -->
     <uses-permission android:name="com.microtechmd.cgms.aidex.permissions.RECEIVE_BG_ESTIMATE" />
 
@@ -17,7 +19,8 @@
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="false" />
-
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
     <uses-permission android:name="android.permission.BLUETOOTH" />

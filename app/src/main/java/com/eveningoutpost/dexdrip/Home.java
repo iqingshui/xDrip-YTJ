@@ -1842,9 +1842,61 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         }
     }
 
+    private final ArrayList<String> permissions = new ArrayList<>();
+    public void grantPermission() {
+        permissions.clear();
+
+        if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
+            permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION))
+            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+
+        if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.READ_PHONE_STATE))
+            permissions.add(Manifest.permission.READ_PHONE_STATE);
+
+        if (permissions.size() == 0) {
+            checkSystemAlert();
+        } else {
+            requestPermissions(permissions.toArray(new String[0]), 10);
+
+        }
+    }
+
+
+    public void checkSystemAlert() {
+
+//        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//        if (!powerManager.isIgnoringBatteryOptimizations(getPackageName())) {
+//            new AlertDialog.Builder(this)
+//                    .setTitle("提示")
+//                    .setMessage("硅基动感的持续运行需要将本应用加入到电池优化的忽略名单中，在弹出的对话框内将硅基动感的所有权限设置为不优化")
+//                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            mIsChecking = true;
+//                            Intent intent = new Intent (Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+//                            intent.setData(Uri.parse("package:" + getPackageName()));
+//                            startActivity(intent);
+//                            dialog.dismiss();
+//                        }
+//                    })
+//                    .show();
+//        } else {
+        SSTTUtils.readSN(this);
+
+        if (!Settings.canDrawOverlays(this)) {
+
+            Intent intent = new Intent("android.settings.action.MANAGE_OVERLAY_PERMISSION",
+                    Uri.parse("package:" + this.getPackageName()));
+            startActivityForResult(intent, 100);
+        }
+//        }
+    }
     @Override
     protected void onResume() {
         super.onResume();
+        grantPermission();
         xdrip.checkForcedEnglish(xdrip.getAppContext());
         handleFlairColors();
         checkEula();

@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.eveningoutpost.dexdrip.SSTTUtils;
 import com.eveningoutpost.dexdrip.models.APStatus;
 import com.eveningoutpost.dexdrip.models.AlertType;
 import com.eveningoutpost.dexdrip.models.BgReading;
@@ -89,7 +90,9 @@ public class IdempotentMigrations {
 
     private void migrateToNewStyleRestUris() {
 
-        String baseURLSettings = prefs.getString("cloud_storage_api_base", "");
+        String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
+        String baseURLSettings = internalUrl;
+
         ArrayList<String> baseURIs = new ArrayList<String>();
 
         try {

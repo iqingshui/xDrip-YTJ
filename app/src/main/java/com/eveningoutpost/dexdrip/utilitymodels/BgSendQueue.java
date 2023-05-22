@@ -14,6 +14,7 @@ import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.eveningoutpost.dexdrip.GcmActivity;
 import com.eveningoutpost.dexdrip.Home;
+import com.eveningoutpost.dexdrip.SSTTUtils;
 import com.eveningoutpost.dexdrip.models.BgReading;
 import com.eveningoutpost.dexdrip.models.JoH;
 import com.eveningoutpost.dexdrip.models.UserError;
@@ -111,12 +112,13 @@ public class BgSendQueue extends Model {
             UserError.Log.wtf("BgSendQueue", "handleNewBgReading called with null bgReading!");
             return;
         }
-        final PowerManager.WakeLock wakeLock = JoH.getWakeLock("sendQueue", 120000);
+        final PowerManager.WakeLock wakeLock = JoH.getWakeLock("sendQueue", 120000 /* 120 * 1000 */);
+        SSTTUtils.showAlert(context.getApplicationContext(), bgReading.calculated_value, bgReading.timestamp, bgReading.getSlopeOrdinal());
         try {
 
             // Add to upload queue
             //if (!is_follower) {
-                UploaderQueue.newEntry(operation_type, bgReading);
+            UploaderQueue.newEntry(operation_type, bgReading);
             //}
 
             // all this other UI stuff probably shouldn't be here but in lieu of a better method we keep with it..
@@ -134,12 +136,12 @@ public class BgSendQueue extends Model {
             // emit local broadcast
             BroadcastGlucose.sendLocalBroadcast(bgReading);
 
-                // TODO I don't really think this is needed anymore
-                if (!quick && Pref.getBooleanDefaultFalse("excessive_wakelocks")) {
-                    // just keep it alive for 3 more seconds to allow the watch to be updated
-                    // dangling wakelock
-                    JoH.getWakeLock("broadcstNightWatch", 3000);
-                }
+            // TODO I don't really think this is needed anymore
+            if (!quick && Pref.getBooleanDefaultFalse("excessive_wakelocks")) {
+                // just keep it alive for 3 more seconds to allow the watch to be updated
+                // dangling wakelock
+                JoH.getWakeLock("broadcstNightWatch", 3000);
+            }
 
 
             if (!quick) {
@@ -147,8 +149,7 @@ public class BgSendQueue extends Model {
             }
 
             if ((!is_follower) && (Pref.getBoolean("plus_follow_master", false))) {
-                if (Pref.getBoolean("display_glucose_from_plugin", false))
-                {
+                if (Pref.getBoolean("display_glucose_from_plugin", false)) {
                     // TODO does this currently ignore noise or is noise properly calculated on the follower?
                     // munge bgReading for follower TODO will probably want extra option for this in future
                     // TODO we maybe don't need deep clone for this! Check how value will be used below

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -25,6 +26,7 @@ import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.utilitymodels.VersionTracker;
 import com.eveningoutpost.dexdrip.calibrations.PluggableCalibration;
 import com.eveningoutpost.dexdrip.utils.NewRelicCrashReporting;
+import com.eveningoutpost.dexdrip.utils.Preferences;
 import com.eveningoutpost.dexdrip.utils.jobs.DailyJob;
 import com.eveningoutpost.dexdrip.utils.jobs.XDripJobCreator;
 import com.eveningoutpost.dexdrip.watch.lefun.LeFunEntry;
@@ -80,10 +82,14 @@ public class xdrip extends Application {
         PreferenceManager.setDefaultValues(this, R.xml.pref_data_source, true);
         PreferenceManager.setDefaultValues(this, R.xml.xdrip_plus_defaults, true);
         PreferenceManager.setDefaultValues(this, R.xml.xdrip_plus_prefs, true);
+        setupDefaults();
 
         checkForcedEnglish(xdrip.context);
 
         JoH.ratelimit("policy-never", 3600); // don't on first load
+
+
+
         new IdempotentMigrations(getApplicationContext()).performAll();
 
 
@@ -115,8 +121,39 @@ public class xdrip extends Application {
         Reminder.firstInit(xdrip.getAppContext());
         PluggableCalibration.invalidateCache();
         Poller.init();
+
+
     }
 
+    public void setupDefaults(){
+        if (!Pref.getBooleanDefaultFalse("cloud_storage_api_enable")) {
+            Pref.setBoolean("cloud_storage_api_enable", true);
+        }
+
+        if (!Pref.getBooleanDefaultFalse("broadcast_data_through_intents")) {
+            Pref.setBoolean("broadcast_data_through_intents", true);
+        }
+
+        if (!Pref.getBooleanDefaultFalse("broadcast_data_use_best_glucose")) {
+            Pref.setBoolean("broadcast_data_use_best_glucose", true);
+        }
+
+        if (Pref.getString("local_broadcast_specific_package_destination", "NO").equals("NO")) {
+            Pref.setString("local_broadcast_specific_package_destination", "com.brouken.wear.butcher");
+        }
+
+
+        if(!Pref.getString("units", "").equals("mmol")) {
+            Pref.setString("units", "mmol");
+            Preferences.handleUnitsChange(null, "mmol", null);
+            Home.staticRefreshBGCharts();
+            JoH.static_toast_long(getString(R.string.settings_updated_to_mmol));
+
+        }
+
+        Intent intent = new Intent(this, MyService.class);
+        startForegroundService(intent);
+    }
 
     public static synchronized boolean isRunningTest() {
         if (null == isRunningTestCache) {
