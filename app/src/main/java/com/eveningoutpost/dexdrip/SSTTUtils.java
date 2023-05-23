@@ -226,12 +226,12 @@ public class SSTTUtils {
                                 if (action == MotionEvent.ACTION_UP) {
                                     if (Math.abs(motionEvent.getRawX() - mDownX) < 10 && Math.abs(motionEvent.getRawY() - mDownY) < 10) {
 
-                                        Intent intent = new Intent(finalContext, Home.class);
-                                        finalContext.startActivity(intent);
+                                        Intent intent = new Intent(finalContext1, Home.class);
+                                        finalContext1.startActivity(intent);
 
 
                                     } else {
-                                        SharedPreferences sharedPreferences = finalContext.getSharedPreferences("alert", Context.MODE_PRIVATE);
+                                        SharedPreferences sharedPreferences = finalContext1.getSharedPreferences("alert", Context.MODE_PRIVATE);
                                         SharedPreferences.Editor editor = sharedPreferences.edit();
                                         editor.putInt("x", mLastTx);
                                         editor.putInt("x", mLastTx);
