@@ -1842,8 +1842,14 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     }
 
     private final ArrayList<String> permissions = new ArrayList<>();
-
+    private boolean isRequested = false;
     public void grantPermission() {
+
+        if(isRequested)
+            return;
+
+        isRequested = false;
+
         permissions.clear();
 
         if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
@@ -1900,7 +1906,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     @Override
     protected void onResume() {
         super.onResume();
-        grantPermission();
+//        grantPermission();
         xdrip.checkForcedEnglish(xdrip.getAppContext());
         handleFlairColors();
         checkEula();

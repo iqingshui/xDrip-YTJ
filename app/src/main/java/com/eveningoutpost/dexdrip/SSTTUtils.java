@@ -1,5 +1,7 @@
 package com.eveningoutpost.dexdrip;
 
+import static com.eveningoutpost.dexdrip.utilitymodels.Constants.MMOLL_TO_MGDL;
+
 import android.annotation.SuppressLint;
 import android.app.KeyguardManager;
 import android.content.Context;
@@ -239,8 +241,8 @@ public class SSTTUtils {
                         });
 
                     }
-                    tvGlucose.setText(String.format("%.1f", glucose));
-                    ivArrow.setImageResource(iArr[finalTrend + 2]);
+                    tvGlucose.setText(String.format("%.1f", glucose / MMOLL_TO_MGDL));
+                    ivArrow.setImageResource(iArr[finalTrend]);
                     tvClock.setText(new SimpleDateFormat("  HH:mm  ").format(new Date(timestamp)));
                 } catch (Exception e) {
                     e.printStackTrace();
