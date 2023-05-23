@@ -112,7 +112,7 @@ public class SSTTUtils {
     }
 
     public static void showAlert(Context context, double glucose, long timestamp, int trend) {
-
+        context = context.getApplicationContext();
         context.startForegroundService(new Intent(context.getApplicationContext(), MyService.class));
 
         if (System.currentTimeMillis() - timestamp > 1000 * 60 * 4) {
