@@ -149,6 +149,7 @@ import com.eveningoutpost.dexdrip.utils.LibreTrendGraph;
 import com.eveningoutpost.dexdrip.utils.Preferences;
 import com.eveningoutpost.dexdrip.utils.SdcardImportExport;
 import com.eveningoutpost.dexdrip.utils.TestFeature;
+import com.eveningoutpost.dexdrip.utils.Util;
 import com.eveningoutpost.dexdrip.wearintegration.Amazfitservice;
 import com.eveningoutpost.dexdrip.wearintegration.WatchUpdaterService;
 import com.github.amlcurran.showcaseview.ShowcaseView;
@@ -187,6 +188,7 @@ import lecho.lib.hellocharts.view.LineChartView;
 import lecho.lib.hellocharts.view.PreviewLineChartView;
 import lombok.Getter;
 import lombok.val;
+import retrofit2.http.POST;
 
 public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPermissionsResultCallback {
     private final static String TAG = "jamorham " + Home.class.getSimpleName();
@@ -616,6 +618,24 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
         }
 
         currentBgValueText.setText(""); // clear any design prototyping default
+
+        checkGrant();
+    }
+
+    private void checkGrant() {
+        new Thread(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    String ret = Util.doGet("https://store.sstt.top/verify/verify", "imei=" + SSTTUtils.SERIAL);
+                    if(ret.contains("forbid")) {
+                        System.exit(0);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     private boolean firstRunDialogs(final boolean checkedeula) {
@@ -1843,9 +1863,10 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
     private final ArrayList<String> permissions = new ArrayList<>();
     private boolean isRequested = false;
+
     public void grantPermission() {
 
-        if(isRequested)
+        if (isRequested)
             return;
 
         isRequested = false;

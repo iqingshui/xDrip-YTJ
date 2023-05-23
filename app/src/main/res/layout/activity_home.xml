@@ -106,6 +106,7 @@
                         android:layout_marginTop="-10dp"
                         android:layout_toStartOf="@+id/trendArrow"
                         android:layout_weight="1"
+                        android:elevation="99dp"
                         android:background="@android:color/transparent"
                         android:gravity="right"
                         android:paddingEnd="20dp"

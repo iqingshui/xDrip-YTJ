@@ -2,6 +2,7 @@ package com.eveningoutpost.dexdrip.utilitymodels;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.BatteryManager;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Base64;
@@ -643,6 +644,10 @@ public class NightscoutUploader {
             json.put("rssi", 100);
             json.put("noise", record.noiseValue());
             json.put("sysTime", format.format(record.timestamp));
+
+            BatteryManager batteryManager = (BatteryManager) mContext.getSystemService(mContext.BATTERY_SERVICE);
+            int currentLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            json.put("battery", currentLevel);
             array.put(json);
         }
         else

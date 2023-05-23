@@ -49,7 +49,7 @@ public class LauncherActivity extends Activity {
     protected void onResume() {
         super.onResume();
         Log.d("TAG", "resume");
-        checkSystemAlert();
+//        checkSystemAlert();
     }
 
     public void checkSystemAlert() {
@@ -79,6 +79,11 @@ public class LauncherActivity extends Activity {
                     Uri.parse("package:" + this.getPackageName()));
             startActivityForResult(intent, 100);
         } else {
+
+            if (PackageManager.PERMISSION_GRANTED != checkSelfPermission(Manifest.permission.READ_PHONE_STATE)) {
+                grantPermission();
+                return;
+            }
 
             SSTTUtils.readSN(this);
             String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());

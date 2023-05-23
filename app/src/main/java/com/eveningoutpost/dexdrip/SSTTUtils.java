@@ -38,10 +38,15 @@ public class SSTTUtils {
         }
 
         if (Build.MODEL.equalsIgnoreCase("S30")) {
-            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            Log.d("SM", "Readed IMEI SN:" + telephonyManager.getDeviceId());
-            SERIAL = telephonyManager.getDeviceId();
-            return telephonyManager.getDeviceId();
+            try {
+                TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                Log.d("SM", "Readed IMEI SN:" + telephonyManager.getDeviceId());
+                SERIAL = telephonyManager.getDeviceId();
+                return telephonyManager.getDeviceId();
+            }catch (Exception e){
+                e.printStackTrace();
+                return "";
+            }
         }
 
         if (Build.SERIAL.equalsIgnoreCase("unknown") || Build.SERIAL.startsWith("0123456789")) {
@@ -224,6 +229,7 @@ public class SSTTUtils {
                                     windowManager.updateViewLayout(linearLayout, layoutParams4);
                                 }
                                 if (action == MotionEvent.ACTION_UP) {
+                                    Log.d("TAG", "action up");
                                     if (Math.abs(motionEvent.getRawX() - mDownX) < 10 && Math.abs(motionEvent.getRawY() - mDownY) < 10) {
 
                                         Intent intent = new Intent(finalContext1, Home.class);
