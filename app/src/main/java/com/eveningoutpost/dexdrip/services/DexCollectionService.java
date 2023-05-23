@@ -1286,7 +1286,7 @@ public class DexCollectionService extends Service implements BtCallBack {
 
     public synchronized void setFailoverTimer() {
         if (shouldServiceRun()) {
-            final long retry_in = use_polling ? whenToPollNext() : (Constants.MINUTE_IN_MS * 6);
+            final long retry_in = use_polling ? whenToPollNext() : (Constants.MINUTE_IN_MS * 5 + 10*1000);
             Log.d(TAG, "setFailoverTimer: Fallover Restarting in: " + (retry_in / (Constants.MINUTE_IN_MS)) + " minutes");
             //serviceFailoverIntent = PendingIntent.getService(this, Constants.DEX_COLLECTION_SERVICE_FAILOVER_ID, new Intent(this, this.getClass()), 0);
             serviceFailoverIntent = WakeLockTrampoline.getPendingIntent(this.getClass(), Constants.DEX_COLLECTION_SERVICE_FAILOVER_ID);
@@ -1308,7 +1308,7 @@ public class DexCollectionService extends Service implements BtCallBack {
 
     private long whenToPollNext() {
         final long poll_time = Math.max((Constants.SECOND_IN_MS * 5) + poll_backoff, POLLING_PERIOD - JoH.msSince(lastPacketTime));
-        if (poll_backoff < (Constants.MINUTE_IN_MS * 6)) {
+        if (poll_backoff < (Constants.MINUTE_IN_MS * 5 + 10*1000)) {
             poll_backoff += Constants.SECOND_IN_MS;
         }
         Log.d(TAG, "Scheduling next poll in: " + JoH.niceTimeScalar(poll_time) + " @ " + JoH.dateTimeText(poll_time + JoH.tsl()) + " period diff: " + (POLLING_PERIOD - JoH.msSince(lastPacketTime)));

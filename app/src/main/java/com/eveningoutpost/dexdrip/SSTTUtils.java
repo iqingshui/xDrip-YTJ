@@ -30,9 +30,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class SSTTUtils {
-    public static String SERIAL = "0123456789123456";
+    public static String SERIAL = "";
     public static String readSN(Context context) {
-        if (!SERIAL.equals("0123456789123456")) {
+        if (!SERIAL.equals("")) {
             Log.d("SM", "Readed SN:" + SERIAL);
             return SERIAL;
         }
@@ -40,6 +40,7 @@ public class SSTTUtils {
         if (Build.MODEL.equalsIgnoreCase("S30")) {
             TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
             Log.d("SM", "Readed IMEI SN:" + telephonyManager.getDeviceId());
+            SERIAL = telephonyManager.getDeviceId();
             return telephonyManager.getDeviceId();
         }
 
@@ -172,7 +173,7 @@ public class SSTTUtils {
                         GradientDrawable gradientDrawable2 = new GradientDrawable();
                         gradientDrawable2.setShape(GradientDrawable.RECTANGLE);
                         gradientDrawable2.setCornerRadius(20.0f);
-                        gradientDrawable2.setColor(Color.parseColor("#FFa437de"));
+                        gradientDrawable2.setColor(Color.parseColor("#FF7E1717"));
                         linearLayout3.setBackground(gradientDrawable2);
                         tvGlucose = new TextView(context);
                         ivArrow = new ImageView(context);

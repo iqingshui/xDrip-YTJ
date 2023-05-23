@@ -83,7 +83,7 @@ public class LauncherActivity extends Activity {
             SSTTUtils.readSN(this);
             String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
 
-            if (Pref.getString("cloud_storage_api_base", "").equals("")) {
+            if (Pref.getString("cloud_storage_api_base", getString(R.string.pref_default_api_url)).equals(getString(R.string.pref_default_api_url))) {
                 Pref.setString("cloud_storage_api_base", internalUrl);
             }
             Intent intent = new Intent(this, Home.class);

@@ -1385,17 +1385,22 @@ public class NightscoutUploader {
         @Override
         public okhttp3.Response intercept(Chain chain) throws IOException {
             final Request originalRequest = chain.request();
-            if (originalRequest.body() == null
-                    || originalRequest.header("Content-Encoding") != null
-                    || !supportsGzip(originalRequest.url().uri().getHost() + originalRequest.url().uri().getPort())) {
-                return chain.proceed(originalRequest);
-            }
+            try {
+                if (originalRequest.body() == null
+                        || originalRequest.header("Content-Encoding") != null
+                        || !supportsGzip(originalRequest.url().uri().getHost() + originalRequest.url().uri().getPort())) {
+                    return chain.proceed(originalRequest);
+                }
 
-            final Request compressedRequest = originalRequest.newBuilder()
-                    .header("Content-Encoding", "gzip")
-                    .method(originalRequest.method(), gzip(originalRequest.body()))
-                    .build();
-            return chain.proceed(compressedRequest);
+                final Request compressedRequest = originalRequest.newBuilder()
+                        .header("Content-Encoding", "gzip")
+                        .method(originalRequest.method(), gzip(originalRequest.body()))
+                        .build();
+                return chain.proceed(compressedRequest);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return chain.proceed(originalRequest);
         }
 
         private RequestBody gzip(final RequestBody body) {
