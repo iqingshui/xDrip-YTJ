@@ -3647,7 +3647,10 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
     }
 
     public void sendFeedback(MenuItem myitem) {
-        startActivity(new Intent(getApplicationContext(), SendFeedBack.class));
+        new AlertDialog.Builder(this)
+                .setTitle("提示")
+                .setMessage(SSTTUtils.readSN(this))
+                .show();
     }
 
     @Override

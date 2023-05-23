@@ -66,9 +66,8 @@
                     android:id="@+id/chart"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_alignParentEnd="true"
                     android:layout_alignParentStart="false"
-                    android:layout_marginTop="45dp"
+                    android:layout_alignParentEnd="true"
                     android:padding="0dp" />
 
                 <TextView
@@ -87,53 +86,55 @@
 
 
                 <LinearLayout
+                    android:id="@+id/layoutCurrentBgValueRealTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:layout_margin="0dp"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginEnd="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:orientation="horizontal"
                     android:padding="0dp"
-                    android:layout_marginBottom="5dp"
-                    android:id="@+id/layoutCurrentBgValueRealTime"
-                    android:paddingBottom="10dp"
-                    android:orientation="horizontal">
+                    android:paddingBottom="10dp">
 
                     <TextView
                         android:id="@+id/currentBgValueRealTime"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="right"
-                        android:layout_marginBottom="1dp"
                         android:layout_marginTop="-10dp"
+                        android:layout_marginBottom="1dp"
                         android:layout_toStartOf="@+id/trendArrow"
                         android:layout_weight="1"
-                        android:elevation="99dp"
                         android:background="@android:color/transparent"
+                        android:elevation="99dp"
                         android:gravity="right"
-                        android:paddingEnd="20dp"
                         android:paddingTop="0dp"
+                        android:paddingEnd="20dp"
                         android:text="13.3"
-                        android:textSize="50sp" />
+                        android:textSize="88sp" />
 
                     <ImageView
                         android:id="@+id/trendArrow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
                         android:layout_alignParentTop="true"
-                        android:layout_marginRight="25dp"
+                        android:layout_alignParentEnd="true"
                         android:layout_marginLeft="10dp"
                         android:layout_marginTop="18dp"
+                        android:layout_marginRight="25dp"
                         android:layout_weight="1"
                         android:background="@android:color/transparent"
                         android:gravity="right"
                         android:inflatedId="@+id/trendArrowView"
-                        android:paddingBottom="0dp"
-                        android:paddingEnd="0dp"
                         android:paddingStart="0dp"
                         android:paddingTop="0dp"
+                        android:paddingEnd="0dp"
+                        android:paddingBottom="0dp"
 
-                        app:srcCompat="@drawable/ic_arrow_forward_color_24dp"
-                        app:showIfTrue="@{safeUnbox(vs.included[`graphic_trend_arrow`])}" />
+                        app:showIfTrue="@{safeUnbox(vs.included[`graphic_trend_arrow`])}"
+                        app:srcCompat="@drawable/ic_arrow_forward_color_24dp" />
                 </LinearLayout>
 
                 <TextView
@@ -171,14 +172,15 @@
                     android:id="@+id/lowpredict"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:layout_alignTop="@+id/treatmentTextView"
                     android:layout_alignParentStart="true"
-                    android:layout_below="@+id/textBridgeBattery"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginTop="-5dp"
                     android:layout_marginRight="5dp"
-                    android:layout_marginTop="-2dp"
                     android:background="@android:color/transparent"
                     android:gravity="left|top"
-                    android:paddingEnd="30dp"
                     android:paddingStart="35dp"
+                    android:paddingEnd="30dp"
                     android:shadowColor="#ff212121"
                     android:shadowDx="0"
                     android:shadowDy="0"

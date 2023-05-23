@@ -65,24 +65,27 @@ public class IdempotentMigrations {
         // Migrate away from old style notifications to Tzachis new Alert system
        // AlertType.CreateStaticAlerts(); // jamorham weird problem auto-calibrations
         if(prefs.getBoolean("bg_notifications", true)){
-            double highMark = Double.parseDouble(prefs.getString("highValue", "170"))+54; // make default alert not too fatiguing
-            double lowMark = Double.parseDouble(prefs.getString("lowValue", "70"));
+//            double highMark = Double.parseDouble(prefs.getString("highValue", "170"))+54; // make default alert not too fatiguing
+//            double lowMark = Double.parseDouble(prefs.getString("lowValue", "70"));
+//
+//            boolean doMgdl = (prefs.getString("units", "mgdl").compareTo("mgdl") == 0);
+//
+//            if(!doMgdl) {
+//                highMark = highMark * Constants.MMOLL_TO_MGDL;
+//                lowMark = lowMark * Constants.MMOLL_TO_MGDL;
+//            }
 
-            boolean doMgdl = (prefs.getString("units", "mgdl").compareTo("mgdl") == 0);
-
-            if(!doMgdl) {
-                highMark = highMark * Constants.MMOLL_TO_MGDL;
-                lowMark = lowMark * Constants.MMOLL_TO_MGDL;
-            }
-            boolean bg_sound_in_silent = prefs.getBoolean("bg_sound_in_silent", true);
+            double highMark = 10.0 * Constants.MMOLL_TO_MGDL;
+            double lowMark = 3.9 * Constants.MMOLL_TO_MGDL;
+            boolean bg_sound_in_silent = prefs.getBoolean("bg_sound_in_silent", false);
             String bg_notification_sound = prefs.getString("bg_notification_sound", "content://settings/system/notification_sound");
 
             int bg_high_snooze = Integer.parseInt(prefs.getString("bg_snooze",  Integer.toString(SnoozeActivity.getDefaultSnooze(true))));
             int bg_low_snooze = Integer.parseInt(prefs.getString("bg_snooze",  Integer.toString(SnoozeActivity.getDefaultSnooze(false))));
 
 
-            AlertType.add_alert(null, mContext.getString(R.string.high_alert), true, highMark, true, 1, bg_notification_sound, 0, 0, bg_sound_in_silent, true, bg_high_snooze, true, true);
-            AlertType.add_alert(null, mContext.getString(R.string.low_alert), false, lowMark, true, 1, bg_notification_sound, 0, 0, bg_sound_in_silent, true, bg_low_snooze, true, true);
+            AlertType.add_alert(null, mContext.getString(R.string.high_alert), true, highMark, true, 1, bg_notification_sound, 0, 0, bg_sound_in_silent, false, bg_high_snooze, true, true);
+            AlertType.add_alert(null, mContext.getString(R.string.low_alert), false, lowMark, true, 1, bg_notification_sound, 0, 0, bg_sound_in_silent, false, bg_low_snooze, true, true);
             prefs.edit().putBoolean("bg_notifications", false).apply();
         }
     }

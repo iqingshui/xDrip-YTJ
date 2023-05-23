@@ -129,9 +129,9 @@ public class SnoozeActivity extends ActivityWithMenu {
 
     static public int getDefaultSnooze(boolean above) {
         if (above) {
-            return 120;
+            return 10;
         }
-        return 35;
+        return 10;
     }
 
     static void SetSnoozePickerValues(NumberPicker picker, boolean above, int default_snooze) {
