@@ -131,33 +131,33 @@ public class SSTTUtils {
                 R.drawable.arrow_bs_rr};
 
         int finalTrend = 6 - trend;
-        Context finalContext = context;
+        final Context finalContext1 = context;
         handler.post(new Runnable() { // from class: com.ShowGlu$1
             @SuppressLint("WrongConstant")
             @Override // java.lang.Runnable
             public void run() {
                 try {
-                    ((KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE))
+                    ((KeyguardManager) finalContext1.getSystemService(Context.KEYGUARD_SERVICE))
                             .newKeyguardLock("tagName").disableKeyguard();
-                    if (!Settings.canDrawOverlays(context)) {
+                    if (!Settings.canDrawOverlays(finalContext1)) {
                         return;
                     }
 
 
                     if (tvGlucose == null) {
 
-                        SharedPreferences sharedPreferences = context.getSharedPreferences("alert", Context.MODE_PRIVATE);
+                        SharedPreferences sharedPreferences = finalContext1.getSharedPreferences("alert", Context.MODE_PRIVATE);
 
                         int x = sharedPreferences.getInt("x", 0);
                         int y = sharedPreferences.getInt("y", 0);
 
-                        final LinearLayout linearLayout = new LinearLayout(context);
+                        final LinearLayout linearLayout = new LinearLayout(finalContext1);
                         linearLayout.setOrientation(LinearLayout.VERTICAL);
                         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(-1, -2);
                         layoutParams.gravity = 17;
-                        LinearLayout linearLayout2 = new LinearLayout(context);
+                        LinearLayout linearLayout2 = new LinearLayout(finalContext1);
                         linearLayout2.setLayoutParams(layoutParams);
-                        tvClock = new TextView(context);
+                        tvClock = new TextView(finalContext1);
                         tvClock.setGravity(17);
                         GradientDrawable gradientDrawable = new GradientDrawable();
                         gradientDrawable.setShape(GradientDrawable.RECTANGLE);
@@ -170,14 +170,14 @@ public class SSTTUtils {
                         linearLayout2.setOrientation(LinearLayout.VERTICAL);
                         linearLayout2.addView(tvClock);
                         linearLayout.addView(linearLayout2);
-                        LinearLayout linearLayout3 = new LinearLayout(context);
+                        LinearLayout linearLayout3 = new LinearLayout(finalContext1);
                         GradientDrawable gradientDrawable2 = new GradientDrawable();
                         gradientDrawable2.setShape(GradientDrawable.RECTANGLE);
                         gradientDrawable2.setCornerRadius(20.0f);
                         gradientDrawable2.setColor(Color.parseColor("#FF7E1717"));
                         linearLayout3.setBackground(gradientDrawable2);
-                        tvGlucose = new TextView(context);
-                        ivArrow = new ImageView(context);
+                        tvGlucose = new TextView(finalContext1);
+                        ivArrow = new ImageView(finalContext1);
 //                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(35, 35);
 //                        ivArrow.setLayoutParams(params);
                         ivArrow.setForegroundGravity(17);
@@ -191,7 +191,7 @@ public class SSTTUtils {
                         tvGlucose.setTextSize(45);
                         tvGlucose.setTextColor(Color.parseColor("#FFFFFF"));
                         linearLayout.addView(linearLayout3);
-                        final WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+                        final WindowManager windowManager = (WindowManager) finalContext1.getSystemService(Context.WINDOW_SERVICE);
                         final WindowManager.LayoutParams layoutParams4 = new WindowManager.LayoutParams();
                         layoutParams4.type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
                         layoutParams4.format = 1;
