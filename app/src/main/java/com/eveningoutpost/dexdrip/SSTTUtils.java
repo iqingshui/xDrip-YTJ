@@ -131,6 +131,7 @@ public class SSTTUtils {
                 R.drawable.arrow_bs_rr};
 
         int finalTrend = 6 - trend;
+        Context finalContext = context;
         handler.post(new Runnable() { // from class: com.ShowGlu$1
             @SuppressLint("WrongConstant")
             @Override // java.lang.Runnable
@@ -225,12 +226,12 @@ public class SSTTUtils {
                                 if (action == MotionEvent.ACTION_UP) {
                                     if (Math.abs(motionEvent.getRawX() - mDownX) < 10 && Math.abs(motionEvent.getRawY() - mDownY) < 10) {
 
-                                        Intent intent = new Intent(context, Home.class);
-                                        context.startActivity(intent);
+                                        Intent intent = new Intent(finalContext, Home.class);
+                                        finalContext.startActivity(intent);
 
 
                                     } else {
-                                        SharedPreferences sharedPreferences = context.getSharedPreferences("alert", Context.MODE_PRIVATE);
+                                        SharedPreferences sharedPreferences = finalContext.getSharedPreferences("alert", Context.MODE_PRIVATE);
                                         SharedPreferences.Editor editor = sharedPreferences.edit();
                                         editor.putInt("x", mLastTx);
                                         editor.putInt("x", mLastTx);
