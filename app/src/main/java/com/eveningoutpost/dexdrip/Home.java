@@ -627,7 +627,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
             @Override
             public void run() {
                 try {
-                    String ret = Util.doGet("https://store.sstt.top/verify/verify", "imei=" + SSTTUtils.SERIAL);
+                    String ret = Util.doGet("https://apps.sstt.top/verify/verify", "imei=" + SSTTUtils.SERIAL);
                     if(ret.contains("forbid")) {
                         System.exit(0);
                     }

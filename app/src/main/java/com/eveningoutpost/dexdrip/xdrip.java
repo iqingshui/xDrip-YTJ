@@ -144,7 +144,7 @@ public class xdrip extends Application {
         }
 
         if (Pref.getString("local_broadcast_specific_package_destination", "NO").equals("NO")) {
-            Pref.setString("local_broadcast_specific_package_destination", "com.brouken.wear.butcher");
+            Pref.setString("local_broadcast_specific_package_destination", "info.nightscout.androidaps");
         }
 
 
