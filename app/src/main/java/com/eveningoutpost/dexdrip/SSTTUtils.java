@@ -37,7 +37,7 @@ public class SSTTUtils {
             return SERIAL;
         }
 
-        if (Build.MODEL.equalsIgnoreCase("S30")) {
+        if (Build.MODEL.equalsIgnoreCase("S30") || Build.MODEL.equalsIgnoreCase("S10") || Build.MODEL.equalsIgnoreCase("S31")) {
             try {
                 TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
                 Log.d("SM", "Readed IMEI SN:" + telephonyManager.getDeviceId());

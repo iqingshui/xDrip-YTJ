@@ -98,7 +98,7 @@ android {
         targetSdkVersion 23
         // change versionCode only when downgrade should be prevented
         // eg, when data structures are incompatible
-        versionCode 1603091400
+        versionCode 1603091401
         versionName generateVersionName()
         buildConfigField "int", "buildVersion", generateVersionNumberString()
         buildConfigField "String", "buildUUID", generateRandomUUID()
