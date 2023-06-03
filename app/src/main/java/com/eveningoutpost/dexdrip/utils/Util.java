@@ -12,13 +12,14 @@ public class Util {
     public static String doGet(String url, String params) {
 
         BufferedReader in = null;
+        HttpURLConnection conn = null;
         try {
             String urlString = url + "?" + params;
             URL realUrl = new URL(urlString);
             System.out.println(urlString);
 
             // 打开和URL之间的连接
-            HttpURLConnection conn = (HttpURLConnection) realUrl.openConnection();
+            conn = (HttpURLConnection) realUrl.openConnection();
 
             // 设置请求参数
             conn.setRequestMethod("GET");// 默认GET，可以不填
@@ -46,6 +47,11 @@ public class Util {
             while ((line = in.readLine()) != null) {
                 sb.append(line);
             }
+            try {
+                conn.disconnect();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             return sb.toString();
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,6 +60,9 @@ public class Util {
                 if (in != null) {
                     in.close();
                     in = null;
+                }
+                if(conn != null) {
+                    conn.disconnect();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
