@@ -2,20 +2,28 @@ package com.eveningoutpost.dexdrip.models;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Pair;
+
 
 import com.eveningoutpost.dexdrip.importedlibraries.usbserial.util.HexDump;
 import com.eveningoutpost.dexdrip.LibreAlarmReceiver;
 import com.eveningoutpost.dexdrip.models.UserError.Log;
 import com.eveningoutpost.dexdrip.NFCReaderX;
 import com.eveningoutpost.dexdrip.R;
+import com.eveningoutpost.dexdrip.models.libre.BloodByteDataAnalyzeUtil;
+import com.eveningoutpost.dexdrip.models.libre.LibreUtils;
 import com.eveningoutpost.dexdrip.utilitymodels.CompatibleApps;
 import com.eveningoutpost.dexdrip.utilitymodels.Constants;
 import com.eveningoutpost.dexdrip.utilitymodels.Intents;
-import com.eveningoutpost.dexdrip.utilitymodels.LibreUtils;
 import com.eveningoutpost.dexdrip.utilitymodels.PersistentStore;
+import com.eveningoutpost.dexdrip.utilitymodels.Pref;
 import com.eveningoutpost.dexdrip.xdrip;
 
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -114,73 +122,147 @@ public class LibreOOPAlgorithm {
 
     static public void sendData(byte[] fullData, long timestamp, byte[] patchUid, byte[] patchInfo, String tagId) {
         if (fullData == null) {
-            Log.e(TAG, "sendData called with null data");
-            return;
-        }
-
-        if (fullData.length < Constants.LIBRE_1_2_FRAM_SIZE) {
-            Log.e(TAG, "sendData called with data size too small. " + fullData.length);
-            return;
-        }
-        Log.i(TAG, "Sending full data to OOP Algorithm data-len = " + fullData.length);
-
-        fullData = java.util.Arrays.copyOfRange(fullData, 0, Constants.LIBRE_1_2_FRAM_SIZE);
-        Log.i(TAG, "Data that will be sent is " + HexDump.dumpHexString(fullData));
-
-        Intent intent = new Intent(Intents.XDRIP_PLUS_LIBRE_DATA);
-        Bundle bundle = new Bundle();
-        bundle.putByteArray(Intents.LIBRE_DATA_BUFFER, fullData);
-        bundle.putLong(Intents.LIBRE_DATA_TIMESTAMP, timestamp);
-        bundle.putString(Intents.LIBRE_SN, PersistentStore.getString("LibreSN"));
-        bundle.putString(Intents.TAG_ID, tagId);
-        bundle.putInt(Intents.LIBRE_RAW_ID, android.os.Process.myPid());
-
-        if (patchUid != null) {
-            bundle.putByteArray(Intents.LIBRE_PATCH_UID_BUFFER, patchUid);
-        }
-        if (patchInfo != null) {
-            bundle.putByteArray(Intents.LIBRE_PATCH_INFO_BUFFER, patchInfo);
-        }
-
-        intent.putExtras(bundle);
-        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-
-        final String packages = PersistentStore.getString(CompatibleApps.EXTERNAL_ALG_PACKAGES);
-        if (packages.length() > 0) {
-            final String[] packagesE = packages.split(",");
-            for (final String destination : packagesE) {
-                if (destination.length() > 3) {
-                    intent.setPackage(destination);
-                    Log.d(TAG, "Sending to package: " + destination);
-                    xdrip.getAppContext().sendBroadcast(intent);
-                }
-            }
+            UserError.Log.e(TAG, "SendData called with null data");
+        } else if (fullData.length < 344) {
+            UserError.Log.e(TAG, "SendData called with data size too small. " + fullData.length);
         } else {
-            Log.d(TAG, "Sending to generic package");
-            xdrip.getAppContext().sendBroadcast(intent);
+            UserError.Log.i(TAG, "Sending full data to OOP Algorithm data-len = " + fullData.length);
+            byte[] copyOfRange = Arrays.copyOfRange(fullData, 0, 344);
+            UserError.Log.i(TAG, "Data that will be sent is " + HexDump.dumpHexString(copyOfRange));
+//            HandleData(AlgorithmRunner.RunAlgorithm(timestamp, xdrip.getAppContext(), copyOfRange, null));
+            HandleGoodReading(tagId, fullData, patchInfo,  timestamp);
         }
-        lastSentData = JoH.tsl();
     }
 
+    public static void analyzeAbbottData(byte[] bArr, byte[] bArr2, boolean z) {
+        BloodByteDataAnalyzeUtil.analyzeBloodByteData(bArr, z);
+    }
+
+
+    public static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.CHINA);
+    public static String getDateTimeStr(long j) {
+        if (j < 0) {
+            j = 0;
+        }
+        return simpleDateFormat.format(new Date(j));
+    }
+
+    public static boolean HandleGoodReading(String tagId, byte[] fullData, byte[] patchInfo, long timestamp) {
+        boolean isHospital = false;
+        if (fullData == null || fullData.length < 176) {
+            Log.e("TAG","瞬感的数据不足176无法进行解析");
+            return false;
+        } else if (!LibreUtils.verify(fullData)) {
+            Log.e("TAG","瞬感的数据不足176无法进行解析");
+            return false;
+        } else {
+            Log.e("TAG","CRC校验医疗版瞬感探头");
+            boolean checkDeviceDataProHCRC = LibreUtils.checkDeviceDataProHCRC(fullData);
+            if (checkDeviceDataProHCRC) {
+                isHospital = true;
+            } else {
+                Log.e("TAG","CRC校验零售版瞬感探头");
+                boolean checkDeviceDataCRC = LibreUtils.checkDeviceDataCRC(fullData);
+                if (checkDeviceDataCRC) {
+                    checkDeviceDataProHCRC = true;
+                }
+                isHospital = false;
+            }
+            Log.e("TAG","CRC校验结果: " + checkDeviceDataProHCRC);
+            if (!checkDeviceDataProHCRC) {
+                Log.e("TAG", "CRC认证失败");
+                Log.e("TAG", "CRC认证失败无法解析");
+            } else if (!BloodByteDataAnalyzeUtil.checkBloodDeviceStatusStart(fullData)) {
+                Log.i(TAG, "该探头尚未激活无法直接使用");
+                Log.d(TAG, "该探头尚未激活无法直接使用");
+                return false;
+            } else if (!LibreUtils.isSensorReady(fullData[4])) {
+                Log.i(TAG, "瞬感探头的状态不对，无法进行数据读取：");
+                return false;
+            } else {
+                Log.i(TAG, "瞬感设备的名字: " + tagId);
+                Log.i("logMessage", "HandleGoodReading: " + getDateTimeStr(timestamp));
+                analyzeAbbottData(fullData, patchInfo, isHospital);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+//    public static void HandleData(com.eveningoutpost.dexdrip.cgm.OOPResultsContainer.OOPResults oOPResults) {
+//        com.eveningoutpost.dexdrip.cgm.OOPResultsContainer.HistoricBg[] historicBgArr;
+//        UserError.Log.e(TAG, "oOPResultsArray===" + oOPResults.toGson());
+//        boolean booleanDefaultFalse = Pref.getBooleanDefaultFalse("calibrate_external_libre_algorithm");
+//        ReadingData.TransferObject transferObject = new ReadingData.TransferObject();
+//        transferObject.data = new ReadingData();
+//        transferObject.data.trend = new ArrayList();
+//        double d = booleanDefaultFalse ? 8.50000063750005d : 1.0d;
+//        Sensor currentSensor = Sensor.currentSensor();
+//        if (currentSensor != null) {
+//            currentSensor.started_at = System.currentTimeMillis() - ((oOPResults.currentTime * 60L) * 1000);
+//            currentSensor.save();
+//        } else {
+//            Sensor.create(System.currentTimeMillis() - ((oOPResults.currentTime * 60L) * 1000));
+//        }
+//        GlucoseData glucoseData = new GlucoseData();
+//        glucoseData.sensorTime = oOPResults.currentTime;
+//        glucoseData.realDate = oOPResults.timestamp;
+//        glucoseData.glucoseLevel = (int) (oOPResults.currentBg * d);
+//        glucoseData.glucoseLevelRaw = (int) (oOPResults.currentBg * d);
+//        transferObject.data.trend.add(glucoseData);
+//        transferObject.data.history = new ArrayList<>();
+//        for (com.eveningoutpost.dexdrip.cgm.OOPResultsContainer.HistoricBg historicBg : oOPResults.historicBg) {
+//            if (historicBg.quality == 0) {
+//                GlucoseData glucoseData2 = new GlucoseData();
+//                glucoseData2.realDate = oOPResults.timestamp + ((historicBg.time - oOPResults.currentTime) * 60_000L);
+//                glucoseData2.glucoseLevel = (int) (historicBg.bg * d);
+//                glucoseData2.glucoseLevelRaw = (int) (historicBg.bg * d);
+//                transferObject.data.history.add(glucoseData2);
+//            }
+//        }
+//        GlucoseData glucoseData3 = new GlucoseData();
+//        glucoseData3.realDate = oOPResults.timestamp;
+//        glucoseData3.glucoseLevel = (int) (oOPResults.currentBg * d);
+//        glucoseData3.glucoseLevelRaw = (int) (oOPResults.currentBg * d);
+//        transferObject.data.history.add(glucoseData3);
+//        UserError.Log.e(TAG, "HandleData Created the following object " + transferObject.toString());
+//        boolean use_smoothed_data = Pref.getBooleanDefaultFalse("libre_use_smoothed_data");
+//        boolean use_raw = !Pref.getString("calibrate_external_libre_2_algorithm_type", "calibrate_raw").equals("no_calibration");
+//
+//        LibreAlarmReceiver.CalculateFromDataTransferObject(transferObject.data, use_smoothed_data, use_raw);
+//    }
+
     static public void sendBleData(byte[] fullData, long timestamp, byte[] patchUid) {
+//        if (fullData == null) {
+//            Log.e(TAG, "sendBleData called with null data");
+//            return;
+//        }
+//
+//        if (fullData.length != 46) {
+//            Log.e(TAG, "sendBleData called with wrong data size " + fullData.length);
+//            return;
+//        }
+//        Log.i(TAG, "Sending full data to OOP Algorithm data-len = " + fullData.length);
+//
+//        Bundle bundle = new Bundle();
+//        bundle.putByteArray(Intents.LIBRE_DATA_BUFFER, fullData);
+//        bundle.putLong(Intents.LIBRE_DATA_TIMESTAMP, timestamp);
+//        bundle.putInt(Intents.LIBRE_RAW_ID, android.os.Process.myPid());
+//        bundle.putByteArray(Intents.LIBRE_PATCH_UID_BUFFER, patchUid);
+//
+//        sendIntent(Intents.XDRIP_PLUS_LIBRE_BLE_DATA, bundle);
         if (fullData == null) {
-            Log.e(TAG, "sendBleData called with null data");
-            return;
+            UserError.Log.e(TAG, "SendData called with null data");
+        } else if (fullData.length < 344) {
+            UserError.Log.e(TAG, "SendData called with data size too small. " + fullData.length);
+        } else {
+            UserError.Log.i(TAG, "Sending full data to OOP Algorithm data-len = " + fullData.length);
+            byte[] copyOfRange = Arrays.copyOfRange(fullData, 0, 344);
+            UserError.Log.i(TAG, "Data that will be sent is " + HexDump.dumpHexString(copyOfRange));
+//            HandleData(AlgorithmRunner.RunAlgorithm(timestamp, xdrip.getAppContext(), copyOfRange, null));
+            HandleGoodReading("", fullData, patchUid,  timestamp);
         }
-
-        if (fullData.length != 46) {
-            Log.e(TAG, "sendBleData called with wrong data size " + fullData.length);
-            return;
-        }
-        Log.i(TAG, "Sending full data to OOP Algorithm data-len = " + fullData.length);
-
-        Bundle bundle = new Bundle();
-        bundle.putByteArray(Intents.LIBRE_DATA_BUFFER, fullData);
-        bundle.putLong(Intents.LIBRE_DATA_TIMESTAMP, timestamp);
-        bundle.putInt(Intents.LIBRE_RAW_ID, android.os.Process.myPid());
-        bundle.putByteArray(Intents.LIBRE_PATCH_UID_BUFFER, patchUid);
-
-        sendIntent(Intents.XDRIP_PLUS_LIBRE_BLE_DATA, bundle);
     }
 
     // A mechanism to wait for the unlock buffer to return:
@@ -381,7 +463,7 @@ public class LibreOOPAlgorithm {
 
         readingData.history = parseBleDataHistory(ble_data, history_bg_vals, timestamp);
 
-        String SensorSN = LibreUtils.decodeSerialNumberKey(patchUid);
+        String SensorSN = com.eveningoutpost.dexdrip.utilitymodels.LibreUtils.decodeSerialNumberKey(patchUid);
 
         Log.d(TAG, "handleDecodedBleResult Created the following object " + readingData.toString());
         NFCReaderX.sendLibrereadingToFollowers(SensorSN, readingData.raw_data, timestamp, patchUid, null);

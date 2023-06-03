@@ -3160,7 +3160,7 @@ public class Home extends ActivityWithMenu implements ActivityCompat.OnRequestPe
 
         if (small_screen) {
             if (currentBgValueText.getText().length() > 4)
-                currentBgValueText.setTextSize(25);
+                currentBgValueText.setTextSize(50);
         }
 
         if (itr != null) {
