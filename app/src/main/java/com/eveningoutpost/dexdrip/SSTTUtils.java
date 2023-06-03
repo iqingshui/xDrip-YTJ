@@ -164,6 +164,8 @@ public class SSTTUtils {
                         linearLayout2.setLayoutParams(layoutParams);
                         tvClock = new TextView(finalContext1);
                         tvClock.setGravity(17);
+                        tvClock.setTextColor(Color.parseColor("#000000"));
+
                         GradientDrawable gradientDrawable = new GradientDrawable();
                         gradientDrawable.setShape(GradientDrawable.RECTANGLE);
                         gradientDrawable.setCornerRadius(5.0f);
@@ -194,7 +196,7 @@ public class SSTTUtils {
                         linearLayout3.addView(tvGlucose);
                         linearLayout3.addView(ivArrow);
                         tvGlucose.setTextSize(45);
-                        tvGlucose.setTextColor(Color.parseColor("#000000"));
+                        tvGlucose.setTextColor(Color.parseColor("#FFFFFF"));
                         linearLayout.addView(linearLayout3);
                         final WindowManager windowManager = (WindowManager) finalContext1.getSystemService(Context.WINDOW_SERVICE);
                         final WindowManager.LayoutParams layoutParams4 = new WindowManager.LayoutParams();
