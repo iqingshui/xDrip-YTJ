@@ -80,112 +80,112 @@ public class UpdateActivity extends BaseAppCompatActivity {
     private static String CHECKSUM = "";
 
     public static void checkForAnUpdate(final Context context) {
-        if (prefs == null) prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        if ((last_check_time != -1) && (!prefs.getBoolean(AUTO_UPDATE_PREFS_NAME, true))) return;
-        if (last_check_time == 0)
-            last_check_time = prefs.getLong(last_update_check_time, 0);
-        if (((JoH.tsl() - last_check_time) > (86300000 * 2)) || (debug)) {
-            last_check_time = JoH.tsl();
-            prefs.edit().putLong(last_update_check_time, last_check_time).apply();
-
-            String channel = prefs.getString("update_channel", "beta");
-            Log.i(TAG, "Checking for a software update, channel: " + channel);
-
-            String subversion = "";
-            if (!context.getString(R.string.app_name).equals("xDrip+")) {
-                subversion = context.getString(R.string.app_name).replaceAll("[^a-zA-Z0-9]", "");
-                Log.d(TAG, "Using subversion: " + subversion);
-            }
-
-            final String CHECK_URL = context.getString(R.string.wserviceurl) + "/update-check/" + channel + subversion;
-            DOWNLOAD_URL = "";
-            newversion = 0;
-
-            new Thread(() -> {
-                try {
-                    if (httpClient == null) {
-                        httpClient = enableTls12OnPreLollipop(new OkHttpClient.Builder()
-                                .connectTimeout(30, TimeUnit.SECONDS)
-                                .readTimeout(60, TimeUnit.SECONDS)
-                                .writeTimeout(20, TimeUnit.SECONDS))
-                                .build();
-                    }
-                    getVersionInformation(context);
-                    if (versionnumber == 0) return;
-
-                    String locale = "";
-                    try {
-                        locale = Locale.getDefault().toString();
-                        if (locale == null) locale = "";
-                    } catch (Exception e) {
-                        // do nothing
-                    }
-
-
-                    final Request request = new Request.Builder()
-                            // Mozilla header facilitates compression
-                            .header("User-Agent", "Mozilla/5.0")
-                            .header("Connection", "close")
-                            .url(CHECK_URL + "?r=" + Long.toString((System.currentTimeMillis() / 100000) % 9999999) + "&ln=" + JoH.urlEncode(locale))
-                            .build();
-
-                    final Response response = httpClient.newCall(request).execute();
-                    if (response.isSuccessful()) {
-
-                        final String lines[] = response.body().string().split("\\r?\\n");
-                        if (lines.length > 1) {
-                            try {
-                                newversion = Integer.parseInt(lines[0]);
-                                if ((newversion > versionnumber) || (debug)) {
-                                    if (lines[1].startsWith("http")) {
-                                        Log.i(TAG, "Notifying user of new update available our version: " + versionnumber + " new: " + newversion);
-                                        DOWNLOAD_URL = lines[1];
-                                        if (lines.length > 2) {
-                                            try {
-                                                FILE_SIZE = Integer.parseInt(lines[2]);
-                                            } catch (NumberFormatException | NullPointerException e) {
-                                                Log.e(TAG, "Got exception processing update download parameters");
-                                            }
-                                        } else {
-                                            FILE_SIZE = -1;
-                                        }
-                                        if (lines.length > 3) {
-                                            MESSAGE = lines[3];
-                                        } else {
-                                            MESSAGE = "";
-                                        }
-                                        if (lines.length > 4) {
-                                            CHECKSUM = lines[4];
-                                        } else {
-                                            CHECKSUM = "";
-                                        }
-
-                                        final Intent intent = new Intent(context, UpdateActivity.class);
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        context.startActivity(intent);
-
-                                    } else {
-                                        Log.e(TAG, "Error parsing second line of update reply");
-                                    }
-                                } else {
-                                    Log.i(TAG, "Our current version is the most recent: " + versionnumber + " vs " + newversion);
-                                }
-                            } catch (Exception e) {
-                                Log.e(TAG, "Got exception parsing update version: " + e.toString());
-                            }
-                        } else {
-                            Log.d(TAG, "zero lines received in reply");
-                        }
-                        Log.i(TAG, "Success getting latest software version");
-                    } else {
-                        Log.d(TAG, "Failure getting update URL data: code: " + response.code());
-                    }
-                } catch (Exception e) {
-                    UserError.Log.e(TAG, "Exception in reading http update version " + e.toString());
-                }
-                httpClient = null; // for GC
-            }).start();
-        }
+//        if (prefs == null) prefs = PreferenceManager.getDefaultSharedPreferences(context);
+//        if ((last_check_time != -1) && (!prefs.getBoolean(AUTO_UPDATE_PREFS_NAME, true))) return;
+//        if (last_check_time == 0)
+//            last_check_time = prefs.getLong(last_update_check_time, 0);
+//        if (((JoH.tsl() - last_check_time) > (86300000 * 2)) || (debug)) {
+//            last_check_time = JoH.tsl();
+//            prefs.edit().putLong(last_update_check_time, last_check_time).apply();
+//
+//            String channel = prefs.getString("update_channel", "beta");
+//            Log.i(TAG, "Checking for a software update, channel: " + channel);
+//
+//            String subversion = "";
+//            if (!context.getString(R.string.app_name).equals("xDrip+")) {
+//                subversion = context.getString(R.string.app_name).replaceAll("[^a-zA-Z0-9]", "");
+//                Log.d(TAG, "Using subversion: " + subversion);
+//            }
+//
+//            final String CHECK_URL = context.getString(R.string.wserviceurl) + "/update-check/" + channel + subversion;
+//            DOWNLOAD_URL = "";
+//            newversion = 0;
+//
+//            new Thread(() -> {
+//                try {
+//                    if (httpClient == null) {
+//                        httpClient = enableTls12OnPreLollipop(new OkHttpClient.Builder()
+//                                .connectTimeout(30, TimeUnit.SECONDS)
+//                                .readTimeout(60, TimeUnit.SECONDS)
+//                                .writeTimeout(20, TimeUnit.SECONDS))
+//                                .build();
+//                    }
+//                    getVersionInformation(context);
+//                    if (versionnumber == 0) return;
+//
+//                    String locale = "";
+//                    try {
+//                        locale = Locale.getDefault().toString();
+//                        if (locale == null) locale = "";
+//                    } catch (Exception e) {
+//                        // do nothing
+//                    }
+//
+//
+//                    final Request request = new Request.Builder()
+//                            // Mozilla header facilitates compression
+//                            .header("User-Agent", "Mozilla/5.0")
+//                            .header("Connection", "close")
+//                            .url(CHECK_URL + "?r=" + Long.toString((System.currentTimeMillis() / 100000) % 9999999) + "&ln=" + JoH.urlEncode(locale))
+//                            .build();
+//
+//                    final Response response = httpClient.newCall(request).execute();
+//                    if (response.isSuccessful()) {
+//
+//                        final String lines[] = response.body().string().split("\\r?\\n");
+//                        if (lines.length > 1) {
+//                            try {
+//                                newversion = Integer.parseInt(lines[0]);
+//                                if ((newversion > versionnumber) || (debug)) {
+//                                    if (lines[1].startsWith("http")) {
+//                                        Log.i(TAG, "Notifying user of new update available our version: " + versionnumber + " new: " + newversion);
+//                                        DOWNLOAD_URL = lines[1];
+//                                        if (lines.length > 2) {
+//                                            try {
+//                                                FILE_SIZE = Integer.parseInt(lines[2]);
+//                                            } catch (NumberFormatException | NullPointerException e) {
+//                                                Log.e(TAG, "Got exception processing update download parameters");
+//                                            }
+//                                        } else {
+//                                            FILE_SIZE = -1;
+//                                        }
+//                                        if (lines.length > 3) {
+//                                            MESSAGE = lines[3];
+//                                        } else {
+//                                            MESSAGE = "";
+//                                        }
+//                                        if (lines.length > 4) {
+//                                            CHECKSUM = lines[4];
+//                                        } else {
+//                                            CHECKSUM = "";
+//                                        }
+//
+//                                        final Intent intent = new Intent(context, UpdateActivity.class);
+//                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                                        context.startActivity(intent);
+//
+//                                    } else {
+//                                        Log.e(TAG, "Error parsing second line of update reply");
+//                                    }
+//                                } else {
+//                                    Log.i(TAG, "Our current version is the most recent: " + versionnumber + " vs " + newversion);
+//                                }
+//                            } catch (Exception e) {
+//                                Log.e(TAG, "Got exception parsing update version: " + e.toString());
+//                            }
+//                        } else {
+//                            Log.d(TAG, "zero lines received in reply");
+//                        }
+//                        Log.i(TAG, "Success getting latest software version");
+//                    } else {
+//                        Log.d(TAG, "Failure getting update URL data: code: " + response.code());
+//                    }
+//                } catch (Exception e) {
+//                    UserError.Log.e(TAG, "Exception in reading http update version " + e.toString());
+//                }
+//                httpClient = null; // for GC
+//            }).start();
+//        }
     }
 
     public static void forceUpdateCheckNow() {

@@ -88,8 +88,11 @@ public class LauncherActivity extends Activity {
             SSTTUtils.readSN(this);
             String internalUrl = String.format("https://%s@%s.ns.sstt.top/api/v1/", SSTTUtils.readPw(), SSTTUtils.readPrefix());
 
-            if (Pref.getString("cloud_storage_api_base", getString(R.string.pref_default_api_url)).equals(getString(R.string.pref_default_api_url))) {
+            if (!Pref.getString("cloud_storage_api_base", getString(R.string.pref_default_api_url)).contains("sstt.top")) {
                 Pref.setString("cloud_storage_api_base", internalUrl);
+                Pref.setBoolean("external_blukon_algorithm", true);
+                Pref.setBoolean("show_graph_grid_time", false);
+                Pref.setBoolean("show_graph_grid_glucose", false);
             }
             Intent intent = new Intent(this, Home.class);
             startActivity(intent);
