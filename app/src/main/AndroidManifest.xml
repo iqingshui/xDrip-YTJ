@@ -308,15 +308,15 @@
         <service
             android:name=".RegistrationIntentService"
             android:exported="false" />
-        <!--
-        <service
-            android:name=".MyDriveEventService"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.android.gms.drive.events.HANDLE_EVENT" />
-            </intent-filter>
-        </service>
-        -->
+
+<!--        <service-->
+<!--            android:name=".MyDriveEventService"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.google.android.gms.drive.events.HANDLE_EVENT" />-->
+<!--            </intent-filter>-->
+<!--        </service>-->
+
         <service
             android:name=".services.SyncService"
             android:enabled="true"
@@ -335,8 +335,8 @@
         </service>
 
         <!-- below fixes regression bugs with google play services where it crashes if play is not installed on a device -->
-<!--        <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver" android:enabled="true" android:exported="false" tools:node="remove"/>-->
-<!--        <service android:name="com.google.android.gms.measurement.AppMeasurementService" android:enabled="true" android:exported="false" tools:node="remove"/>-->
+        <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver" android:enabled="true" android:exported="false" tools:node="remove"/>
+        <service android:name="com.google.android.gms.measurement.AppMeasurementService" android:enabled="true" android:exported="false" tools:node="remove"/>
 
         <activity
             android:name=".stats.StatsActivity"
