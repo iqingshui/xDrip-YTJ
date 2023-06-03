@@ -194,7 +194,7 @@ public class SSTTUtils {
                         linearLayout3.addView(tvGlucose);
                         linearLayout3.addView(ivArrow);
                         tvGlucose.setTextSize(45);
-                        tvGlucose.setTextColor(Color.parseColor("#FFFFFF"));
+                        tvGlucose.setTextColor(Color.parseColor("#000000"));
                         linearLayout.addView(linearLayout3);
                         final WindowManager windowManager = (WindowManager) finalContext1.getSystemService(Context.WINDOW_SERVICE);
                         final WindowManager.LayoutParams layoutParams4 = new WindowManager.LayoutParams();
