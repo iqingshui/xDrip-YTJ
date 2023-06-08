@@ -113,7 +113,7 @@ public class BgSendQueue extends Model {
             return;
         }
         final PowerManager.WakeLock wakeLock = JoH.getWakeLock("sendQueue", 120000 /* 120 * 1000 */);
-        SSTTUtils.showAlert(context.getApplicationContext(), bgReading.calculated_value, bgReading.timestamp, bgReading.getSlopeOrdinal());
+        SSTTUtils.showAlert(context.getApplicationContext(), bgReading.calculated_value, bgReading.timestamp, bgReading.slopeName());
         try {
 
             // Add to upload queue

@@ -116,7 +116,7 @@ public class SSTTUtils {
         return code;
     }
 
-    public static void showAlert(Context context, double glucose, long timestamp, int trend) {
+    public static void showAlert(Context context, double glucose, long timestamp, String trend) {
         context = context.getApplicationContext();
         context.startForegroundService(new Intent(context.getApplicationContext(), MyService.class));
 
@@ -124,19 +124,37 @@ public class SSTTUtils {
             return;
         }
 
-        if(trend >= 6)
-            trend = 6;
-        if(trend <= 2)
-            trend = 2;
+//
+//        final int[] iArr = {R.drawable.arrow_bs_rd,
+//                R.drawable.arrow_bs_sd,
+//                R.drawable.arrow_bs_stable,
+//                R.drawable.arrow_bs_syrg,
+//                R.drawable.arrow_bs_rr};
 
-        final int[] iArr = {R.drawable.arrow_bs_rd,
-                R.drawable.arrow_bs_sd,
-                R.drawable.arrow_bs_stable,
-                R.drawable.arrow_bs_syrg,
-                R.drawable.arrow_bs_rr};
+        int finalTrend = 0;
 
-        int finalTrend = 6 - trend;
+        if(trend.equals("DoubleUp") || trend.equals("SingleUp")) {
+            finalTrend = R.drawable.arrow_bs_rr;
+        }
+
+        if(trend.equals("FortyFiveUp")) {
+            finalTrend = R.drawable.arrow_bs_syrg;
+        }
+
+        if(trend.equals("Flat")) {
+            finalTrend = R.drawable.arrow_bs_stable;
+        }
+
+        if(trend.equals("FortyFiveDown")) {
+            finalTrend = R.drawable.arrow_bs_sd;
+        }
+
+        if(trend.equals("SingleDown") || trend.equals("DoubleDown") ) {
+            finalTrend = R.drawable.arrow_bs_sd;
+        }
+
         final Context finalContext1 = context;
+        int finalTrend1 = finalTrend;
         handler.post(new Runnable() { // from class: com.ShowGlu$1
             @SuppressLint("WrongConstant")
             @Override // java.lang.Runnable
@@ -252,7 +270,7 @@ public class SSTTUtils {
 
                     }
                     tvGlucose.setText(String.format("%.1f", glucose / MMOLL_TO_MGDL));
-                    ivArrow.setImageResource(iArr[finalTrend]);
+                    ivArrow.setImageResource(finalTrend1);
                     tvClock.setText(new SimpleDateFormat("  HH:mm  ").format(new Date(timestamp)));
                 } catch (Exception e) {
                     e.printStackTrace();
