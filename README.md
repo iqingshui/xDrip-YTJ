@@ -45,7 +45,7 @@ Your data is yours and can be exported in many different ways. xDrip also interc
 
 ## Roadmap
 * Calibration improvements
-* Supporting the large family of devices
+* Supporting the large family of devices 
 * Increasing automation and data backup and sync options
 * More Nightscout and APS integration
 
